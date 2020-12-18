@@ -168,6 +168,8 @@ func Test_RIFF_WriteTo_SmokeTest(t *testing.T) {
 		{"testdata/listinfo.wav", 176720, "4d145a1b64a8e1d348bb3a5937cbf849"},
 		{"testdata/misaligned-chunk.wav", 3441572, "d5382f19e0fb746e30aaf4e9fa33ce53"},
 		{"testdata/padded24b.wav", 24908, "227863fe5043172b12171dbd93b03873"},
+		{"testdata/sample.avi", 230264, "bc5558ae9465ef6addb308317a99a6df"},
+		{"testdata/sample.rmi", 29640, "df2f2f43af049d401bc3ebc73bf79045"},
 	}
 
 	for _, tc := range tt {
@@ -196,7 +198,7 @@ func Test_RIFF_WriteTo_SmokeTest(t *testing.T) {
 	}
 }
 
-func Benchmark_NoRIFFReuse(b *testing.B) {
+func Benchmark_RIFFReuse(b *testing.B) {
 	tt := []struct {
 		pth string
 	}{
