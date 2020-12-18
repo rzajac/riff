@@ -1,0 +1,13 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="test ChunkDATA" type="GoTestRunConfiguration" factoryName="Go Test">
+    <module name="riff" />
+    <working_directory value="$PROJECT_DIR$" />
+    <framework value="gotest" />
+    <kind value="PACKAGE" />
+    <package value="github.com/rzajac/riff" />
+    <directory value="$PROJECT_DIR$" />
+    <filePath value="$PROJECT_DIR$" />
+    <pattern value="Test_ChunkDATA_" />
+    <method v="2" />
+  </configuration>
+</component>
