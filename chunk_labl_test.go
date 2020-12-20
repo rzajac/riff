@@ -33,6 +33,19 @@ func lablChunkTextLenOdd(t *testing.T) io.Reader {
 	return src
 }
 
+func Test_ChunkLABL_LABL(t *testing.T) {
+	// --- When ---
+	ch := LABL()
+
+	// --- Then ---
+	assert.Exactly(t, IDlabl, ch.ID())
+	assert.Exactly(t, uint32(0), ch.Size())
+	assert.Exactly(t, uint32(0), ch.Type())
+	assert.True(t, ch.Multi())
+	assert.Nil(t, ch.Chunks())
+	assert.False(t, ch.Raw())
+}
+
 func Test_ChunkLABL_ReadFrom_TextLenEven(t *testing.T) {
 	// --- Given ---
 	src := lablChunkTextLenEven(t)

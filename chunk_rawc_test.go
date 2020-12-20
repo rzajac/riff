@@ -15,10 +15,10 @@ import (
 
 func Test_ChunkRAWC_RAWC(t *testing.T) {
 	// --- When ---
-	ch := RAWC(unkID, LoadData)
+	ch := RAWC(IDUNKN, LoadData)
 
 	// --- Then ---
-	assert.Exactly(t, uint32(unkID), ch.ID())
+	assert.Exactly(t, uint32(IDUNKN), ch.ID())
 	assert.Exactly(t, uint32(0), ch.Size())
 	assert.Exactly(t, uint32(0), ch.Type())
 	assert.True(t, ch.Multi())
@@ -34,7 +34,7 @@ func Test_ChunkRAWC_ReadFrom(t *testing.T) {
 	src.WriteByte(0)                 // Padding byte (1).
 
 	// --- When ---
-	ch := RAWC(unkID, LoadData)
+	ch := RAWC(IDUNKN, LoadData)
 	n, err := ch.ReadFrom(src)
 
 	// --- Then ---
@@ -52,7 +52,7 @@ func Test_ChunkRAWC_ReadFrom_ErrUnexpectedEOF(t *testing.T) {
 	src.Write([]byte{0, 1, 2}) // Too short chunk size.
 
 	// --- When ---
-	ch := RAWC(unkID, LoadData)
+	ch := RAWC(IDUNKN, LoadData)
 	n, err := ch.ReadFrom(src)
 
 	// --- Then ---
@@ -69,7 +69,7 @@ func Test_ChunkRAWC_ReadFrom_ErrorReadingData(t *testing.T) {
 	src.WriteByte(0)                 // Padding byte (1).
 
 	// --- When ---
-	ch := RAWC(unkID, LoadData)
+	ch := RAWC(IDUNKN, LoadData)
 	n, err := ch.ReadFrom(src)
 
 	// --- Then ---
@@ -85,7 +85,7 @@ func Test_ChunkRAWC_ReadFrom_ErrorReadingPadding(t *testing.T) {
 	src.Write([]byte{'A', 'B', 'C'}) // Chunk data (*).
 
 	// --- When ---
-	ch := RAWC(unkID, LoadData)
+	ch := RAWC(IDUNKN, LoadData)
 	n, err := ch.ReadFrom(src)
 
 	// --- Then ---
@@ -102,7 +102,7 @@ func Test_ChunkRAWC_ReadFrom_SkipData_SeekAvailable(t *testing.T) {
 	src.WriteByte(0)                 // Padding byte (1).
 
 	// --- When ---
-	ch := RAWC(unkID, SkipData)
+	ch := RAWC(IDUNKN, SkipData)
 	n, err := ch.ReadFrom(src)
 
 	// --- Then ---
@@ -125,7 +125,7 @@ func Test_ChunkRAWC_ReadFrom_SkipData_SeekNotAvailable(t *testing.T) {
 	test.WriteTo(t, src, tmp)
 
 	// --- When ---
-	ch := RAWC(unkID, SkipData)
+	ch := RAWC(IDUNKN, SkipData)
 	n, err := ch.ReadFrom(src)
 
 	// --- Then ---
@@ -137,7 +137,7 @@ func Test_ChunkRAWC_ReadFrom_SkipData_SeekNotAvailable(t *testing.T) {
 
 func Test_ChunkRAWC_Write_WithoutPadding(t *testing.T) {
 	// --- Given ---
-	ch := RAWC(unkID, LoadData)
+	ch := RAWC(IDUNKN, LoadData)
 	ch.size = 2
 	ch.data = []byte{0, 1}
 
@@ -159,7 +159,7 @@ func Test_ChunkRAWC_Write_WithoutPadding(t *testing.T) {
 
 func Test_ChunkRAWC_Write_WithPadding(t *testing.T) {
 	// --- Given ---
-	ch := RAWC(unkID, LoadData)
+	ch := RAWC(IDUNKN, LoadData)
 	ch.size = 3
 	ch.data = []byte{0, 1, 2}
 
@@ -182,7 +182,7 @@ func Test_ChunkRAWC_Write_WithPadding(t *testing.T) {
 
 func Test_ChunkRAWC_Write_ErrorWritingID(t *testing.T) {
 	// --- Given ---
-	ch := RAWC(unkID, LoadData)
+	ch := RAWC(IDUNKN, LoadData)
 	ch.size = 3
 	ch.data = []byte{0, 1, 2}
 
@@ -203,7 +203,7 @@ func Test_ChunkRAWC_Write_ErrorWritingID(t *testing.T) {
 
 func Test_ChunkRAWC_Write_ErrorWritingData(t *testing.T) {
 	// --- Given ---
-	ch := RAWC(unkID, LoadData)
+	ch := RAWC(IDUNKN, LoadData)
 	ch.size = 3
 	ch.data = []byte{0, 1, 2}
 
@@ -228,7 +228,7 @@ func Test_ChunkRAWC_Write_ErrorWritingData(t *testing.T) {
 
 func Test_ChunkRAWC_Write_ErrorWritingPadding(t *testing.T) {
 	// --- Given ---
-	ch := RAWC(unkID, LoadData)
+	ch := RAWC(IDUNKN, LoadData)
 	ch.size = 3
 	ch.data = []byte{0, 1, 2}
 
@@ -254,7 +254,7 @@ func Test_ChunkRAWC_Write_ErrorWritingPadding(t *testing.T) {
 
 func Test_ChunkRAWC_Write_SkipData(t *testing.T) {
 	// --- Given ---
-	ch := RAWC(unkID, SkipData)
+	ch := RAWC(IDUNKN, SkipData)
 	ch.size = 3
 
 	dst := &bytes.Buffer{}
@@ -269,7 +269,7 @@ func Test_ChunkRAWC_Write_SkipData(t *testing.T) {
 
 func Test_ChunkRAWC_Reset(t *testing.T) {
 	// --- Given ---
-	ch := RAWC(unkID, LoadData)
+	ch := RAWC(IDUNKN, LoadData)
 	ch.size = 3
 	ch.data = []byte{0, 1, 2}
 
@@ -277,7 +277,7 @@ func Test_ChunkRAWC_Reset(t *testing.T) {
 	ch.Reset()
 
 	// --- Then ---
-	assert.Exactly(t, uint32(unkID), ch.ID())
+	assert.Exactly(t, uint32(IDUNKN), ch.ID())
 	assert.Exactly(t, uint32(0), ch.Size())
 	assert.Len(t, ch.data, 0)
 }

@@ -44,7 +44,7 @@ func Test_StrToID(t *testing.T) {
 		{"tlst", 0x746c7374},
 		{"JUNK", IDJUNK},
 		{"bext", 0x62657874},
-		{"ABCD", unkID},
+		{"ABCD", IDUNKN},
 		{"AVI ", TypeAVI},
 		{"RMID", TypeRMID},
 

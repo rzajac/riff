@@ -35,7 +35,7 @@ func Test_Uint32_Read(t *testing.T) {
 	dst := make([]byte, 4)
 
 	// --- When ---
-	n, err := Uint32(unkID).Read(dst)
+	n, err := Uint32(IDUNKN).Read(dst)
 
 	// --- Then ---
 	assert.ErrorIs(t, err, io.EOF)
@@ -48,7 +48,7 @@ func Test_Uint32_Read_Error(t *testing.T) {
 	dst := make([]byte, 3)
 
 	// --- When ---
-	n, err := Uint32(unkID).Read(dst)
+	n, err := Uint32(IDUNKN).Read(dst)
 
 	// --- Then ---
 	assert.EqualError(t, err, "buffer too small for uint32: length too short")

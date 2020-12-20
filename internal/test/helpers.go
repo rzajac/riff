@@ -15,6 +15,15 @@ func WriteUint32LE(t *testing.T, dst io.Writer, v uint32) {
 	}
 }
 
+// WriteUint32BE writes v encoded using big endian to dst.
+// Calls t.Fatal() on error.
+func WriteUint32BE(t *testing.T, dst io.Writer, v uint32) {
+	t.Helper()
+	if err := binary.Write(dst, binary.BigEndian, &v); err != nil {
+		t.Fatal(err)
+	}
+}
+
 // WriteUint16LE writes v encoded using little endian to dst.
 // Calls t.Fatal() on error.
 func WriteUint16LE(t *testing.T, dst io.Writer, v uint16) {

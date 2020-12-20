@@ -15,7 +15,7 @@ func Test_Registry_Register_Get(t *testing.T) {
 
 	// --- Then ---
 	assert.IsType(t, &ChunkFMT{}, reg.Get(IDfmt))
-	assert.IsType(t, &ChunkRAWC{}, reg.Get(unkID))
+	assert.IsType(t, &ChunkRAWC{}, reg.Get(IDUNKN))
 }
 
 func Test_Registry_Get_Reuse(t *testing.T) {

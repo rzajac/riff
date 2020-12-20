@@ -47,6 +47,19 @@ func infoChunkThree(t *testing.T) io.Reader {
 	return src
 }
 
+func Test_ChunkINFO_INFO(t *testing.T) {
+	// --- When ---
+	ch := INFO(LabIART)
+
+	// --- Then ---
+	assert.Exactly(t, LabIART, ch.ID())
+	assert.Exactly(t, uint32(0), ch.Size())
+	assert.Exactly(t, uint32(0), ch.Type())
+	assert.True(t, ch.Multi())
+	assert.Nil(t, ch.Chunks())
+	assert.False(t, ch.Raw())
+}
+
 func Test_ChunkINFO_ReadFrom_TextLenEven(t *testing.T) {
 	// --- Given ---
 	src := infoChunkTextLenEven(t)
@@ -87,7 +100,7 @@ func Test_ChunkINFO_ReadFrom_TextLenOdd(t *testing.T) {
 	assert.True(t, test.IsAllRead(src))
 }
 
-func Test_ChunkINFI_ReadFrom_Errors(t *testing.T) {
+func Test_ChunkINFO_ReadFrom_Errors(t *testing.T) {
 	// Reading less then 8 bytes should always result in an error.
 	for i := 1; i < 8; i++ {
 		// --- Given ---
@@ -201,6 +214,7 @@ func Test_ChunkINFO_InfoLabel(t *testing.T) {
 	}
 
 	for _, tc := range tt {
+		tc := tc
 		t.Run(tc.str, func(t *testing.T) {
 			t.Parallel()
 			got := InfoLabel(tc.label)

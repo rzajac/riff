@@ -31,7 +31,7 @@ func Test_Chunks_First_NotPresent(t *testing.T) {
 	chs := rif.Chunks()
 
 	// --- When ---
-	ch := chs.First(unkID)
+	ch := chs.First(IDUNKN)
 
 	// --- Then ---
 	assert.Nil(t, ch)

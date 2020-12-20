@@ -45,6 +45,19 @@ func ltxtChunkTextLenOdd(t *testing.T) io.Reader {
 	return src
 }
 
+func Test_ChunkLTXT_LTXT(t *testing.T) {
+	// --- When ---
+	ch := LTXT()
+
+	// --- Then ---
+	assert.Exactly(t, IDltxt, ch.ID())
+	assert.Exactly(t, uint32(0), ch.Size())
+	assert.Exactly(t, uint32(0), ch.Type())
+	assert.True(t, ch.Multi())
+	assert.Nil(t, ch.Chunks())
+	assert.False(t, ch.Raw())
+}
+
 func Test_ChunkLTXT_ReadFrom_TextLenEven(t *testing.T) {
 	// --- Given ---
 	src := ltxtChunkTextLenEven(t)

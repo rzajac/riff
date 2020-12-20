@@ -92,7 +92,7 @@ func (ch *ChunkLIST) ReadFrom(r io.Reader) (int64, error) {
 
 	for {
 		if sum-4 >= int64(ch.size) {
-			return sum, fmt.Errorf("invalid LIST chunk size")
+			return sum, fmt.Errorf("invalid LIST chunk")
 		}
 
 		if err = ReadChunkID(r, &id); err != nil {
@@ -113,6 +113,7 @@ func (ch *ChunkLIST) ReadFrom(r io.Reader) (int64, error) {
 		}
 		ch.chunks = append(ch.chunks, dec)
 
+		// Break the loop if we read all bytes declared in size.
 		if sum-4 == int64(ch.size) {
 			break
 		}
