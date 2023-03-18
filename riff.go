@@ -92,6 +92,15 @@ func Bare(reg *Registry) *RIFF {
 	return rif
 }
 
+// Compose returns new instance of RIFF based on Chunks
+// This method allows you to create a copy of the original RIFF with modifications.
+func Compose(chs Chunks) *RIFF {
+	reg := Bare(nil)
+	reg.Modify(chs)
+
+	return reg
+}
+
 func (rif *RIFF) ID() uint32     { return IDRIFF }
 func (rif *RIFF) Size() uint32   { return rif.size }
 func (rif *RIFF) Type() uint32   { return rif.riffType }
@@ -203,4 +212,11 @@ func (rif *RIFF) decodeChunk(id uint32, r io.Reader) (int64, error) {
 	}
 	rif.chunks = append(rif.chunks, dec)
 	return n, nil
+}
+
+// Modify set a new set of the chunks.
+func (rif *RIFF) Modify(chs Chunks) {
+	rif.chunks = chs
+	// Recalculate chunks size.
+	rif.size = 4 + rif.chunks.Size()
 }

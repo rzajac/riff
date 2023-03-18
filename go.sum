@@ -2,12 +2,8 @@ github.com/davecgh/go-spew v1.1.0 h1:ZDRjVQ15GmhC3fiQ8ni8+OwkZQO4DARzQgrnXU1Liz8
 github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/pmezard/go-difflib v1.0.0 h1:4DBwDE0NGyQoBHbLQYPwSUPoCMWR5BEzIk/f1lZbAQM=
 github.com/pmezard/go-difflib v1.0.0/go.mod h1:iKH77koFhYxTK1pcRnkKkqfTogsbg7gZNVY4sRDYZ/4=
-github.com/rzajac/flexbuf v0.12.0 h1:UmxoO/e0rLwqn6P9bgZIwezdORgjqjb8zPTmQ3oy+fQ=
-github.com/rzajac/flexbuf v0.12.0/go.mod h1:9BG3rBgf4+o7A5E0fvtJuenJKgtQglmzGkIh21iFXTY=
 github.com/rzajac/flexbuf v0.14.0 h1:CHf+puRkM90RuBlVnfVRzW2Y1xAjbg8soWMFVOxids4=
 github.com/rzajac/flexbuf v0.14.0/go.mod h1:RNcYQQ1lPnO/vLh/pTwazVfHYyRk9jxoQvO/5YK9O8Y=
-github.com/rzajac/testkit v0.5.1 h1:25IQBi/r/cFMWDykcGESuq2YxNqjp5TZTkZuoCmTIGY=
-github.com/rzajac/testkit v0.5.1/go.mod h1:Ye3Z+ZxhqIMSIr9W19b9fLNCKBOYvbN+5Ncw3J50F1k=
 github.com/rzajac/testkit v0.7.0 h1:3Sfoz4QFgIdEpvhzAz8xb5VzzQKhtUTeCQ81UHpy71k=
 github.com/rzajac/testkit v0.7.0/go.mod h1:Ye3Z+ZxhqIMSIr9W19b9fLNCKBOYvbN+5Ncw3J50F1k=
 github.com/stretchr/objx v0.1.0 h1:4G4v2dO3VZwixGIRoQ5Lfboy6nUhCyYzaqnIAPPhYs4=
