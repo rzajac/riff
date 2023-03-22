@@ -198,6 +198,54 @@ func Test_RIFF_WriteTo_SmokeTest(t *testing.T) {
 	}
 }
 
+func Test_Compose(t *testing.T) {
+	t.Run("ok", func(t *testing.T) {
+		// --- Given ---
+		rif := New(SkipData)
+		_, _ = rif.ReadFrom(kit.OpenFile(t, "testdata/bwf.wav"))
+		chs := rif.Chunks()
+
+		// --- When ---
+		nw := Compose(chs.Remove(IDfmt))
+
+		// --- Then ---
+		assert.Exactly(t, 14, len(chs.IDs()))
+		assert.Exactly(t, 13, len(nw.Chunks()))
+	})
+
+	t.Run("size ok", func(t *testing.T) {
+		// --- Given ---
+		rif := New(SkipData)
+		_, _ = rif.ReadFrom(kit.OpenFile(t, "testdata/bwf.wav"))
+		chs := rif.Chunks()
+
+		// --- When ---
+		nw := Compose(chs)
+
+		// --- Then ---
+		assert.Exactly(t, rif.Size(), nw.Size())
+		assert.Exactly(t, len(chs.IDs()), len(nw.Chunks().IDs()))
+	})
+}
+
+func Test_Modify(t *testing.T) {
+	t.Run("ok", func(t *testing.T) {
+		// --- Given ---
+		rif := New(SkipData)
+		_, _ = rif.ReadFrom(kit.OpenFile(t, "testdata/bwf.wav"))
+		s := rif.Size()
+		chs := rif.Chunks()
+		f := chs.First(IDfmt)
+
+		// --- When ---
+		rif.Modify(chs.Remove(IDfmt))
+
+		// --- Then ---
+		assert.Exactly(t, s-(f.Size()+8), rif.Size())
+		assert.Exactly(t, 13, len(rif.Chunks().IDs()))
+	})
+}
+
 func Benchmark_RIFFReuse(b *testing.B) {
 	tt := []struct {
 		pth string

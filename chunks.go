@@ -58,3 +58,15 @@ func (chs Chunks) WriteTo(w io.Writer) (n int64, err error) {
 	}
 	return sum, nil
 }
+
+// Remove returns chunks without given id.
+// Keeps the previous order.
+func (chs Chunks) Remove(id uint32) Chunks {
+	for i := 0; i < len(chs); i++ {
+		ch := chs[i]
+		if ch.ID() == id {
+			return append(chs[:i], chs[i+1:]...)
+		}
+	}
+	return chs
+}

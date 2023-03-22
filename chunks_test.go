@@ -95,3 +95,52 @@ func Test_Chunks_Count(t *testing.T) {
 	// --- Then ---
 	assert.Exactly(t, 7, cnt)
 }
+
+func Test_Chunks_Remove(t *testing.T) {
+	t.Run("ok", func(t *testing.T) {
+		// --- Given ---
+		rif := New(SkipData)
+		_, err := rif.ReadFrom(kit.OpenFile(t, "testdata/bwf.wav"))
+		require.NoError(t, err)
+
+		el := len(rif.Chunks().IDs())
+
+		// --- When ---
+		chs := rif.Chunks().Remove(IDfmt).IDs()
+
+		// --- Then ---
+		assert.Exactly(t, el-1, len(chs))
+		assert.Exactly(t, 14, el)
+	})
+
+	t.Run("right order", func(t *testing.T) {
+		// --- Given ---
+		rif := New(SkipData)
+		_, _ = rif.ReadFrom(kit.OpenFile(t, "testdata/bwf.wav"))
+		chsIDs := rif.Chunks().IDs()
+
+		// --- When ---
+		chs := rif.Chunks().Remove(IDfmt).IDs()
+
+		// --- Then ---
+		for i := 1; i < len(chs); i++ {
+			assert.Exactly(t, chsIDs[i+1], chs[i])
+		}
+		assert.Exactly(t, len(chsIDs)-1, len(chs))
+		assert.Exactly(t, 14, len(chsIDs))
+	})
+
+	t.Run("key does not exist", func(t *testing.T) {
+		// --- Given ---
+		rif := New(SkipData)
+		_, _ = rif.ReadFrom(kit.OpenFile(t, "testdata/bwf.wav"))
+		chsIDs := rif.Chunks().IDs()
+		id := uint32(1)
+
+		// --- When ---
+		chs := rif.Chunks().Remove(id).IDs()
+
+		// --- Then ---
+		assert.Exactly(t, len(chsIDs), len(chs))
+	})
+}
