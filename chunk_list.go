@@ -170,3 +170,10 @@ func (ch *ChunkLIST) Reset() {
 	}
 	ch.chunks = ch.chunks[:0]
 }
+
+// Modify set a new set of the chunks.
+func (ch *ChunkLIST) Modify(chs Chunks) {
+	ch.chunks = chs
+	// Recalculate chunks size.
+	ch.size = 4 + ch.chunks.Size()
+}

@@ -146,7 +146,7 @@ func Test_ChunkLIST_Type_unknown(t *testing.T) {
 }
 
 func Test_ChunkLIST_ReadFrom_Errors(t *testing.T) {
-	// Reading less then 20 bytes should always result in an error.
+	// Reading less than 20 bytes should always result in an error.
 	for i := 1; i < 20; i++ {
 		// --- Given ---
 		reg := NewRegistry(RAWCMake(LoadData))
@@ -199,7 +199,7 @@ func Test_ChunkLIST_WriteTo(t *testing.T) {
 }
 
 func Test_ChunkLIST_WriteTo_Errors(t *testing.T) {
-	// Writing less then 60 bytes should always result in an error.
+	// Writing less than 60 bytes should always result in an error.
 	for i := 60; i > 0; i-- {
 		// --- Given ---
 		reg := NewRegistry(RAWCMake(LoadData))
@@ -237,4 +237,29 @@ func Test_ChunkLIST_Reset(t *testing.T) {
 	assert.Exactly(t, uint32(0), ch.Size())
 	assert.Exactly(t, uint32(0), ch.ListType)
 	assert.Len(t, ch.Chunks(), 0)
+}
+
+func Test_ChunkLIST_Modify(t *testing.T) {
+	t.Run("ok", func(t *testing.T) {
+		// --- Given ---
+		reg := NewRegistry(RAWCMake(LoadData))
+
+		src := listChunkType_adtl(t)
+		test.Skip4B(t, src) // Skip chunk ID.
+
+		ch := LIST(LoadData, reg)
+		_, _ = ch.ReadFrom(src)
+
+		size := ch.Size()
+		chs := ch.Chunks()
+		txt := chs.First(IDltxt)
+
+		// --- When ---
+		ch.Modify(chs.Remove(IDltxt))
+
+		// --- Then ---
+		assert.Exactly(t, size-(txt.Size()+8), ch.Size())
+		assert.Exactly(t, 1, len(ch.Chunks().IDs()))
+		assert.Nil(t, ch.Chunks().First(IDltxt))
+	})
 }
