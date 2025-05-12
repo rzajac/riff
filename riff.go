@@ -108,6 +108,8 @@ func (rif *RIFF) Multi() bool    { return false }
 func (rif *RIFF) Chunks() Chunks { return rif.chunks }
 func (rif *RIFF) Raw() bool      { return false }
 
+func (rif *RIFF) SetType(t uint32) { rif.riffType = t }
+
 // IsRegistered returns true if decoder for id is registered.
 func (rif *RIFF) IsRegistered(id uint32) bool {
 	return rif.reg.Has(id)
