@@ -2,12 +2,13 @@ package riff
 
 import (
 	"bytes"
+	"os"
 	"testing"
 
+	"github.com/ctx42/testing/pkg/assert"
+	"github.com/ctx42/testing/pkg/must"
 	"github.com/rzajac/flexbuf"
 	kit "github.com/rzajac/testkit"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 )
 
 func Test_RIFF_New(t *testing.T) {
@@ -15,9 +16,9 @@ func Test_RIFF_New(t *testing.T) {
 	rif := New(LoadData)
 
 	// --- Then ---
-	assert.Exactly(t, IDRIFF, rif.ID())
-	assert.Exactly(t, uint32(0), rif.Size())
-	assert.Exactly(t, uint32(0), rif.Type())
+	assert.Equal(t, IDRIFF, rif.ID())
+	assert.Equal(t, uint32(0), rif.Size())
+	assert.Equal(t, uint32(0), rif.Type())
 	assert.False(t, rif.Multi())
 
 	assert.True(t, rif.IsRegistered(IDfmt))
@@ -31,9 +32,9 @@ func Test_RIFF_Bare(t *testing.T) {
 	rif := Bare(reg)
 
 	// --- Then ---
-	assert.Exactly(t, IDRIFF, rif.ID())
-	assert.Exactly(t, uint32(0), rif.Size())
-	assert.Exactly(t, uint32(0), rif.Type())
+	assert.Equal(t, IDRIFF, rif.ID())
+	assert.Equal(t, uint32(0), rif.Size())
+	assert.Equal(t, uint32(0), rif.Type())
 	assert.False(t, rif.Multi())
 
 	assert.False(t, rif.IsRegistered(IDfmt))
@@ -45,9 +46,9 @@ func Test_RIFF_Bare_NilRegistry(t *testing.T) {
 	rif := Bare(nil)
 
 	// --- Then ---
-	assert.Exactly(t, IDRIFF, rif.ID())
-	assert.Exactly(t, uint32(0), rif.Size())
-	assert.Exactly(t, uint32(0), rif.Type())
+	assert.Equal(t, IDRIFF, rif.ID())
+	assert.Equal(t, uint32(0), rif.Size())
+	assert.Equal(t, uint32(0), rif.Type())
 	assert.False(t, rif.Multi())
 
 	assert.False(t, rif.IsRegistered(IDfmt))
@@ -100,17 +101,17 @@ func Test_RIFF_ReadFrom_SmokeTest(t *testing.T) {
 	for _, tc := range tt {
 		t.Run(tc.pth, func(t *testing.T) {
 			// --- Given ---
-			fil := kit.OpenFile(t, tc.pth)
+			fil := must.Value(os.Open(tc.pth))
 
 			// --- When ---
 			n, err := rif.ReadFrom(fil)
 
 			// --- Then ---
-			assert.NoError(t, err, "test %s", tc.pth)
-			assert.Exactly(t, tc.size, n, "test %s", tc.pth)
-			assert.Exactly(t, uint32(tc.size-8), rif.Size(), "test %s", tc.pth)
-			assert.Exactly(t, tc.typ, rif.Type(), "test %s", tc.pth)
-			assert.Len(t, rif.Chunks(), tc.chunks, "test %s", tc.pth)
+			assert.NoError(t, err)
+			assert.Equal(t, tc.size, n)
+			assert.Equal(t, uint32(tc.size-8), rif.Size())
+			assert.Equal(t, tc.typ, rif.Type())
+			assert.Len(t, tc.chunks, rif.Chunks())
 		})
 	}
 }
@@ -118,8 +119,8 @@ func Test_RIFF_ReadFrom_SmokeTest(t *testing.T) {
 func Test_RIFF_CorrectingSize(t *testing.T) {
 	// --- Given ---
 	rif := New(LoadData)
-	_, err := rif.ReadFrom(kit.OpenFile(t, "testdata/bwf.wav"))
-	require.NoError(t, err)
+	_, err := rif.ReadFrom(must.Value(os.Open("testdata/bwf.wav")))
+	assert.NoError(t, err)
 
 	// --- When ---
 	dst := &bytes.Buffer{}
@@ -128,9 +129,9 @@ func Test_RIFF_CorrectingSize(t *testing.T) {
 	// --- Then ---
 	assert.NoError(t, err)
 
-	assert.Exactly(t, int64(27074), n)
-	assert.Exactly(t, uint32(27074), rif.Size()+8)
-	assert.Exactly(t, "67cfc04cee2ad37e90e480a26fa45c0e", kit.MD5Reader(t, dst))
+	assert.Equal(t, int64(27074), n)
+	assert.Equal(t, uint32(27074), rif.Size()+8)
+	assert.Equal(t, "67cfc04cee2ad37e90e480a26fa45c0e", kit.MD5Reader(t, dst))
 }
 
 func Test_RIFF_WriteTo_SmokeTest(t *testing.T) {
@@ -175,25 +176,25 @@ func Test_RIFF_WriteTo_SmokeTest(t *testing.T) {
 	for _, tc := range tt {
 		t.Run(tc.pth, func(t *testing.T) {
 			// --- Given ---
-			_, err := rif.ReadFrom(kit.OpenFile(t, tc.pth))
-			require.NoError(t, err, "test %s", tc.pth)
+			_, err := rif.ReadFrom(must.Value(os.Open(tc.pth)))
+			assert.NoError(t, err)
 
 			// --- When ---
 			buf := &bytes.Buffer{}
 			n, err := rif.WriteTo(buf)
 
 			// --- Then ---
-			assert.NoError(t, err, "test %s", tc.pth)
+			assert.NoError(t, err)
 
 			// fil := kit.CreateFile(t, filepath.Join("tmp", filepath.Base(tc.pth)))
 			// content := kit.ReadAll(t, buf)
 			// fil.Write(content)
 			// buf = bytes.NewBuffer(content)
 
-			assert.Exactly(t, tc.size, n, "test %s", tc.pth)
+			assert.Equal(t, tc.size, n)
 			size := int64(RealSize(rif.Size()) + 8)
-			assert.Exactly(t, tc.size, size, "test %s", tc.pth)
-			assert.Exactly(t, tc.hash, kit.MD5Reader(t, buf), "test %s", tc.pth)
+			assert.Equal(t, tc.size, size)
+			assert.Equal(t, tc.hash, kit.MD5Reader(t, buf))
 		})
 	}
 }
@@ -202,29 +203,29 @@ func Test_Compose(t *testing.T) {
 	t.Run("ok", func(t *testing.T) {
 		// --- Given ---
 		rif := New(SkipData)
-		_, _ = rif.ReadFrom(kit.OpenFile(t, "testdata/bwf.wav"))
+		_, _ = rif.ReadFrom(must.Value(os.Open("testdata/bwf.wav")))
 		chs := rif.Chunks()
 
 		// --- When ---
 		nw := Compose(chs.Remove(IDfmt))
 
 		// --- Then ---
-		assert.Exactly(t, 14, len(chs.IDs()))
-		assert.Exactly(t, 13, len(nw.Chunks()))
+		assert.Equal(t, 14, len(chs.IDs()))
+		assert.Equal(t, 13, len(nw.Chunks()))
 	})
 
 	t.Run("size ok", func(t *testing.T) {
 		// --- Given ---
 		rif := New(SkipData)
-		_, _ = rif.ReadFrom(kit.OpenFile(t, "testdata/bwf.wav"))
+		_, _ = rif.ReadFrom(must.Value(os.Open("testdata/bwf.wav")))
 		chs := rif.Chunks()
 
 		// --- When ---
 		nw := Compose(chs)
 
 		// --- Then ---
-		assert.Exactly(t, rif.Size(), nw.Size())
-		assert.Exactly(t, len(chs.IDs()), len(nw.Chunks().IDs()))
+		assert.Equal(t, rif.Size(), nw.Size())
+		assert.Equal(t, len(chs.IDs()), len(nw.Chunks().IDs()))
 	})
 }
 
@@ -232,7 +233,7 @@ func Test_Modify(t *testing.T) {
 	t.Run("ok", func(t *testing.T) {
 		// --- Given ---
 		rif := New(SkipData)
-		_, _ = rif.ReadFrom(kit.OpenFile(t, "testdata/bwf.wav"))
+		_, _ = rif.ReadFrom(must.Value(os.Open("testdata/bwf.wav")))
 		s := rif.Size()
 		chs := rif.Chunks()
 		f := chs.First(IDfmt)
@@ -241,8 +242,8 @@ func Test_Modify(t *testing.T) {
 		rif.Modify(chs.Remove(IDfmt))
 
 		// --- Then ---
-		assert.Exactly(t, s-(f.Size()+8), rif.Size())
-		assert.Exactly(t, 13, len(rif.Chunks().IDs()))
+		assert.Equal(t, s-(f.Size()+8), rif.Size())
+		assert.Equal(t, 13, len(rif.Chunks().IDs()))
 	})
 }
 
@@ -290,7 +291,7 @@ func Benchmark_RIFFReuse(b *testing.B) {
 		b.Run(tc.pth, func(b *testing.B) {
 			b.StopTimer()
 			buf := &flexbuf.Buffer{}
-			_, err := buf.ReadFrom(kit.OpenFile(b, tc.pth))
+			_, err := buf.ReadFrom(must.Value(os.Open(tc.pth)))
 			if err != nil {
 				b.Fatal(err)
 			}

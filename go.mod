@@ -1,9 +1,11 @@
 module github.com/rzajac/riff
 
-go 1.15
+go 1.24
+
+toolchain go1.24.0
 
 require (
+	github.com/ctx42/testing v0.24.1
 	github.com/rzajac/flexbuf v0.14.0
 	github.com/rzajac/testkit v0.7.0
-	github.com/stretchr/testify v1.6.2-0.20201103103935-92707c0b2d50
 )

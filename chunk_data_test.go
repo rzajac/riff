@@ -6,9 +6,9 @@ import (
 	"testing"
 	"time"
 
+	"github.com/ctx42/testing/pkg/assert"
+	"github.com/ctx42/testing/pkg/must"
 	kit "github.com/rzajac/testkit"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 
 	"github.com/rzajac/riff/internal/test"
 )
@@ -53,14 +53,14 @@ func Test_ChunkDATA_DATA_SkipDataMode(t *testing.T) {
 	ch := DATA(SkipData)
 
 	// --- Then ---
-	assert.Exactly(t, IDdata, ch.ID())
-	assert.Exactly(t, uint32(0), ch.Size())
-	assert.Exactly(t, uint32(0), ch.Type())
+	assert.Equal(t, IDdata, ch.ID())
+	assert.Equal(t, uint32(0), ch.Size())
+	assert.Equal(t, uint32(0), ch.Type())
 	assert.False(t, ch.Multi())
 	assert.Nil(t, ch.Chunks())
 	assert.False(t, ch.Raw())
 	assert.Nil(t, ch.data)
-	assert.Exactly(t, []byte{}, kit.ReadAll(t, ch.Data()))
+	assert.Equal(t, []byte{}, must.Value(io.ReadAll(ch.Data())))
 }
 
 func Test_ChunkDATA_DATA_LoadDataMode(t *testing.T) {
@@ -68,14 +68,14 @@ func Test_ChunkDATA_DATA_LoadDataMode(t *testing.T) {
 	ch := DATA(LoadData)
 
 	// --- Then ---
-	assert.Exactly(t, IDdata, ch.ID())
-	assert.Exactly(t, uint32(0), ch.Size())
-	assert.Exactly(t, uint32(0), ch.Type())
+	assert.Equal(t, IDdata, ch.ID())
+	assert.Equal(t, uint32(0), ch.Size())
+	assert.Equal(t, uint32(0), ch.Type())
 	assert.False(t, ch.Multi())
 	assert.Nil(t, ch.Chunks())
 	assert.False(t, ch.Raw())
 	assert.NotNil(t, ch.data)
-	assert.Exactly(t, []byte{}, kit.ReadAll(t, ch.Data()))
+	assert.Equal(t, []byte{}, must.Value(io.ReadAll(ch.Data())))
 }
 
 func Test_ChunkDATA_SetData_Even(t *testing.T) {
@@ -87,8 +87,8 @@ func Test_ChunkDATA_SetData_Even(t *testing.T) {
 
 	// --- Then ---
 	assert.NoError(t, err)
-	assert.Exactly(t, uint32(4), ch.Size())
-	assert.Exactly(t, []byte{0, 1, 2, 3}, kit.ReadAll(t, ch.Data()))
+	assert.Equal(t, uint32(4), ch.Size())
+	assert.Equal(t, []byte{0, 1, 2, 3}, must.Value(io.ReadAll(ch.Data())))
 }
 
 func Test_ChunkDATA_SetData_Odd(t *testing.T) {
@@ -100,8 +100,8 @@ func Test_ChunkDATA_SetData_Odd(t *testing.T) {
 
 	// --- Then ---
 	assert.NoError(t, err)
-	assert.Exactly(t, uint32(3), ch.Size())
-	assert.Exactly(t, []byte{0, 1, 2}, kit.ReadAll(t, ch.Data()))
+	assert.Equal(t, uint32(3), ch.Size())
+	assert.Equal(t, []byte{0, 1, 2}, must.Value(io.ReadAll(ch.Data())))
 }
 
 func Test_ChunkDATA_SetData_SkipDataMode_Error(t *testing.T) {
@@ -113,8 +113,8 @@ func Test_ChunkDATA_SetData_SkipDataMode_Error(t *testing.T) {
 
 	// --- Then ---
 	assert.ErrorIs(t, err, ErrSkipDataMode)
-	assert.Exactly(t, uint32(0), ch.Size())
-	assert.Exactly(t, []byte{}, kit.ReadAll(t, ch.Data()))
+	assert.Equal(t, uint32(0), ch.Size())
+	assert.Equal(t, []byte{}, must.Value(io.ReadAll(ch.Data())))
 }
 
 func Test_ChunkDATA_ReadFrom_Even(t *testing.T) {
@@ -130,8 +130,8 @@ func Test_ChunkDATA_ReadFrom_Even(t *testing.T) {
 	// --- Then ---
 	assert.NoError(t, err)
 
-	assert.Exactly(t, int64(20), n)
-	assert.Exactly(t, uint32(16), ch.Size())
+	assert.Equal(t, int64(20), n)
+	assert.Equal(t, uint32(16), ch.Size())
 
 	exp := []byte{
 		0x00, 0x01, 0x02, 0x03,
@@ -139,7 +139,7 @@ func Test_ChunkDATA_ReadFrom_Even(t *testing.T) {
 		0x08, 0x09, 0x0a, 0x0b,
 		0x0c, 0x0d, 0x0e, 0x0f,
 	}
-	assert.Exactly(t, exp, kit.ReadAll(t, ch.Data()))
+	assert.Equal(t, exp, must.Value(io.ReadAll(ch.Data())))
 	assert.True(t, test.IsAllRead(src))
 }
 
@@ -156,8 +156,8 @@ func Test_ChunkDATA_ReadFrom_Odd(t *testing.T) {
 	// --- Then ---
 	assert.NoError(t, err)
 
-	assert.Exactly(t, int64(20), n)
-	assert.Exactly(t, uint32(15), ch.Size())
+	assert.Equal(t, int64(20), n)
+	assert.Equal(t, uint32(15), ch.Size())
 
 	exp := []byte{
 		0x00, 0x01, 0x02, 0x03,
@@ -165,7 +165,7 @@ func Test_ChunkDATA_ReadFrom_Odd(t *testing.T) {
 		0x08, 0x09, 0x0a, 0x0b,
 		0x0c, 0x0d, 0x0e,
 	}
-	assert.Exactly(t, exp, kit.ReadAll(t, ch.Data()))
+	assert.Equal(t, exp, must.Value(io.ReadAll(ch.Data())))
 	assert.True(t, test.IsAllRead(src))
 }
 
@@ -180,7 +180,9 @@ func Test_ChunkDATA_ReadFrom_Errors(t *testing.T) {
 		_, err := DATA(LoadData).ReadFrom(io.LimitReader(src, int64(i)))
 
 		// --- Then ---
-		assert.Error(t, err, "i=%d", i)
+		if !assert.Error(t, err) {
+			t.Logf("error i=%d", i)
+		}
 	}
 }
 
@@ -202,19 +204,18 @@ func TestChunkDATA_WriteTo(t *testing.T) {
 			test.Skip4B(t, src) // Skip chunk ID.
 
 			ch := DATA(LoadData)
-			_, err := ch.ReadFrom(src)
-			require.NoError(t, err, tc.testN)
+			must.Value(ch.ReadFrom(src))
 
 			// --- When ---
 			dst := &bytes.Buffer{}
 			n, err := ch.WriteTo(dst)
 
 			// --- Then ---
-			assert.NoError(t, err, tc.testN)
-			assert.Exactly(t, tc.n, n, tc.testN)
+			assert.NoError(t, err)
+			assert.Equal(t, tc.n, n)
 
-			exp := kit.ReadAll(t, tc.ch(t))
-			assert.Exactly(t, exp, dst.Bytes(), tc.testN)
+			exp := must.Value(io.ReadAll(tc.ch(t)))
+			assert.Equal(t, exp, dst.Bytes())
 		})
 	}
 }
@@ -228,14 +229,18 @@ func Test_ChunkDATA_WriteTo_Errors(t *testing.T) {
 
 		ch := DATA(LoadData)
 		_, err := ch.ReadFrom(src)
-		assert.NoError(t, err, "i=%d", i)
+		if assert.NoError(t, err) {
+			t.Logf("error i=%d", i)
+		}
 
 		// --- When ---
 		dst := &bytes.Buffer{}
 		_, err = ch.WriteTo(kit.ErrWriter(dst, i, nil))
 
 		// --- Then ---
-		assert.Error(t, err, "i=%d", i)
+		if !assert.Error(t, err) {
+			t.Logf("error i=%d", i)
+		}
 	}
 }
 
@@ -246,14 +251,14 @@ func Test_ChunkDATA_WriteTo_SkipData(t *testing.T) {
 
 	ch := DATA(SkipData)
 	_, err := ch.ReadFrom(src)
-	require.NoError(t, err)
+	assert.NoError(t, err)
 
 	// --- When ---
 	n, err := ch.WriteTo(&bytes.Buffer{})
 
 	// --- Then ---
 	assert.ErrorIs(t, err, ErrSkipDataMode)
-	assert.Exactly(t, int64(0), n)
+	assert.Equal(t, int64(0), n)
 }
 
 func Test_ChunkDATA_Duration(t *testing.T) {
@@ -266,7 +271,7 @@ func Test_ChunkDATA_Duration(t *testing.T) {
 	d := ch.Duration(88200)
 
 	// --- Then ---
-	assert.Exactly(t, time.Second, d)
+	assert.Equal(t, time.Second, d)
 }
 
 func Test_ChunkDATA_Reset(t *testing.T) {
@@ -280,6 +285,6 @@ func Test_ChunkDATA_Reset(t *testing.T) {
 	ch.Reset()
 
 	// --- Then ---
-	assert.Exactly(t, uint32(0), ch.Size())
-	assert.Len(t, ch.data, 0)
+	assert.Equal(t, uint32(0), ch.Size())
+	assert.Len(t, 0, ch.data)
 }

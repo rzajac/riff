@@ -4,7 +4,7 @@ import (
 	"io"
 	"testing"
 
-	"github.com/stretchr/testify/assert"
+	"github.com/ctx42/testing/pkg/assert"
 )
 
 func Test_Uint32_String(t *testing.T) {
@@ -25,7 +25,7 @@ func Test_Uint32_String(t *testing.T) {
 			got := Uint32(tc.idI).String()
 
 			// --- Then ---
-			assert.Exactly(t, tc.idS, got, "test %s", tc.idS)
+			assert.Equal(t, tc.idS, got)
 		})
 	}
 }
@@ -39,8 +39,8 @@ func Test_Uint32_Read(t *testing.T) {
 
 	// --- Then ---
 	assert.ErrorIs(t, err, io.EOF)
-	assert.Exactly(t, 4, n)
-	assert.Exactly(t, []byte{0x41, 0x42, 0x43, 0x44}, dst)
+	assert.Equal(t, 4, n)
+	assert.Equal(t, []byte{0x41, 0x42, 0x43, 0x44}, dst)
 }
 
 func Test_Uint32_Read_Error(t *testing.T) {
@@ -51,7 +51,7 @@ func Test_Uint32_Read_Error(t *testing.T) {
 	n, err := Uint32(IDUNKN).Read(dst)
 
 	// --- Then ---
-	assert.EqualError(t, err, "buffer too small for uint32: length too short")
-	assert.ErrorIs(t, err, ErrTooShort)
-	assert.Exactly(t, 0, n)
+	assert.ErrorEqual(t, "buffer too small for uint32: length too short", err)
+	assert.ErrorIs(t, ErrTooShort, err)
+	assert.Equal(t, 0, n)
 }

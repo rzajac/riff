@@ -5,9 +5,9 @@ import (
 	"io"
 	"testing"
 
+	"github.com/ctx42/testing/pkg/assert"
+	"github.com/ctx42/testing/pkg/must"
 	kit "github.com/rzajac/testkit"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 
 	"github.com/rzajac/riff/internal/test"
 )
@@ -101,24 +101,24 @@ func Test_ChunkSMPL_SMPL(t *testing.T) {
 	ch := SMPL()
 
 	// --- Then ---
-	assert.Exactly(t, IDsmpl, ch.ID())
-	assert.Exactly(t, uint32(0), ch.Size())
-	assert.Exactly(t, uint32(0), ch.Type())
+	assert.Equal(t, IDsmpl, ch.ID())
+	assert.Equal(t, uint32(0), ch.Size())
+	assert.Equal(t, uint32(0), ch.Type())
 	assert.False(t, ch.Multi())
 	assert.Nil(t, ch.Chunks())
 	assert.False(t, ch.Raw())
 
-	assert.Exactly(t, uint32(0), ch.Manufacturer)
-	assert.Exactly(t, uint32(0), ch.Product)
-	assert.Exactly(t, uint32(0), ch.SamplePeriod)
-	assert.Exactly(t, uint32(0), ch.MIDIUnityNote)
-	assert.Exactly(t, uint32(0), ch.MIDIPitchFraction)
-	assert.Exactly(t, uint32(0), ch.SMPTEFormat)
-	assert.Exactly(t, uint32(0), ch.SMPTEOffset)
-	assert.Exactly(t, uint32(0), ch.SampleLoopCnt)
-	assert.Exactly(t, uint32(0), ch.SamplerDataCnt)
-	assert.Exactly(t, []byte{}, kit.ReadAll(t, ch.SamplerData()))
-	assert.Len(t, ch.SampleLoops, 0)
+	assert.Equal(t, uint32(0), ch.Manufacturer)
+	assert.Equal(t, uint32(0), ch.Product)
+	assert.Equal(t, uint32(0), ch.SamplePeriod)
+	assert.Equal(t, uint32(0), ch.MIDIUnityNote)
+	assert.Equal(t, uint32(0), ch.MIDIPitchFraction)
+	assert.Equal(t, uint32(0), ch.SMPTEFormat)
+	assert.Equal(t, uint32(0), ch.SMPTEOffset)
+	assert.Equal(t, uint32(0), ch.SampleLoopCnt)
+	assert.Equal(t, uint32(0), ch.SamplerDataCnt)
+	assert.Equal(t, []byte{}, must.Value(io.ReadAll(ch.SamplerData())))
+	assert.Len(t, 0, ch.SampleLoops)
 }
 
 func Test_ChunkSMPL_ReadFrom_WithoutLoops(t *testing.T) {
@@ -133,19 +133,19 @@ func Test_ChunkSMPL_ReadFrom_WithoutLoops(t *testing.T) {
 	// --- Then ---
 	assert.NoError(t, err)
 
-	assert.Exactly(t, int64(40), n)
-	assert.Exactly(t, uint32(36), ch.Size())
-	assert.Exactly(t, uint32(1), ch.Manufacturer)
-	assert.Exactly(t, uint32(2), ch.Product)
-	assert.Exactly(t, uint32(3), ch.SamplePeriod)
-	assert.Exactly(t, uint32(4), ch.MIDIUnityNote)
-	assert.Exactly(t, uint32(5), ch.MIDIPitchFraction)
-	assert.Exactly(t, uint32(6), ch.SMPTEFormat)
-	assert.Exactly(t, uint32(7), ch.SMPTEOffset)
-	assert.Exactly(t, uint32(0), ch.SampleLoopCnt)
-	assert.Exactly(t, uint32(0), ch.SamplerDataCnt)
-	assert.Len(t, ch.SampleLoops, 0)
-	assert.Exactly(t, []byte{}, kit.ReadAll(t, ch.SamplerData()))
+	assert.Equal(t, int64(40), n)
+	assert.Equal(t, uint32(36), ch.Size())
+	assert.Equal(t, uint32(1), ch.Manufacturer)
+	assert.Equal(t, uint32(2), ch.Product)
+	assert.Equal(t, uint32(3), ch.SamplePeriod)
+	assert.Equal(t, uint32(4), ch.MIDIUnityNote)
+	assert.Equal(t, uint32(5), ch.MIDIPitchFraction)
+	assert.Equal(t, uint32(6), ch.SMPTEFormat)
+	assert.Equal(t, uint32(7), ch.SMPTEOffset)
+	assert.Equal(t, uint32(0), ch.SampleLoopCnt)
+	assert.Equal(t, uint32(0), ch.SamplerDataCnt)
+	assert.Len(t, 0, ch.SampleLoops)
+	assert.Equal(t, []byte{}, must.Value(io.ReadAll(ch.SamplerData())))
 	assert.True(t, test.IsAllRead(src))
 }
 
@@ -161,19 +161,19 @@ func Test_ChunkSMPL_ReadFrom_WithoutLoopsWithData(t *testing.T) {
 	// --- Then ---
 	assert.NoError(t, err)
 
-	assert.Exactly(t, int64(44), n)
-	assert.Exactly(t, uint32(39), ch.Size())
-	assert.Exactly(t, uint32(1), ch.Manufacturer)
-	assert.Exactly(t, uint32(2), ch.Product)
-	assert.Exactly(t, uint32(3), ch.SamplePeriod)
-	assert.Exactly(t, uint32(4), ch.MIDIUnityNote)
-	assert.Exactly(t, uint32(5), ch.MIDIPitchFraction)
-	assert.Exactly(t, uint32(6), ch.SMPTEFormat)
-	assert.Exactly(t, uint32(7), ch.SMPTEOffset)
-	assert.Exactly(t, uint32(0), ch.SampleLoopCnt)
-	assert.Exactly(t, uint32(3), ch.SamplerDataCnt)
-	assert.Len(t, ch.SampleLoops, 0)
-	assert.Exactly(t, []byte{0, 1, 2}, kit.ReadAll(t, ch.SamplerData()))
+	assert.Equal(t, int64(44), n)
+	assert.Equal(t, uint32(39), ch.Size())
+	assert.Equal(t, uint32(1), ch.Manufacturer)
+	assert.Equal(t, uint32(2), ch.Product)
+	assert.Equal(t, uint32(3), ch.SamplePeriod)
+	assert.Equal(t, uint32(4), ch.MIDIUnityNote)
+	assert.Equal(t, uint32(5), ch.MIDIPitchFraction)
+	assert.Equal(t, uint32(6), ch.SMPTEFormat)
+	assert.Equal(t, uint32(7), ch.SMPTEOffset)
+	assert.Equal(t, uint32(0), ch.SampleLoopCnt)
+	assert.Equal(t, uint32(3), ch.SamplerDataCnt)
+	assert.Len(t, 0, ch.SampleLoops)
+	assert.Equal(t, []byte{0, 1, 2}, must.Value(io.ReadAll(ch.SamplerData())))
 	assert.True(t, test.IsAllRead(src))
 }
 
@@ -189,27 +189,27 @@ func Test_ChunkSMPL_ReadFrom_WithLoopsWithData(t *testing.T) {
 	// --- Then ---
 	assert.NoError(t, err)
 
-	assert.Exactly(t, int64(68), n)
-	assert.Exactly(t, uint32(63), ch.Size())
-	assert.Exactly(t, uint32(1), ch.Manufacturer)
-	assert.Exactly(t, uint32(2), ch.Product)
-	assert.Exactly(t, uint32(3), ch.SamplePeriod)
-	assert.Exactly(t, uint32(4), ch.MIDIUnityNote)
-	assert.Exactly(t, uint32(5), ch.MIDIPitchFraction)
-	assert.Exactly(t, uint32(6), ch.SMPTEFormat)
-	assert.Exactly(t, uint32(7), ch.SMPTEOffset)
-	assert.Exactly(t, uint32(1), ch.SampleLoopCnt)
-	assert.Exactly(t, uint32(27), ch.SamplerDataCnt)
-	require.Len(t, ch.SampleLoops, 1)
+	assert.Equal(t, int64(68), n)
+	assert.Equal(t, uint32(63), ch.Size())
+	assert.Equal(t, uint32(1), ch.Manufacturer)
+	assert.Equal(t, uint32(2), ch.Product)
+	assert.Equal(t, uint32(3), ch.SamplePeriod)
+	assert.Equal(t, uint32(4), ch.MIDIUnityNote)
+	assert.Equal(t, uint32(5), ch.MIDIPitchFraction)
+	assert.Equal(t, uint32(6), ch.SMPTEFormat)
+	assert.Equal(t, uint32(7), ch.SMPTEOffset)
+	assert.Equal(t, uint32(1), ch.SampleLoopCnt)
+	assert.Equal(t, uint32(27), ch.SamplerDataCnt)
+	assert.Len(t, 1, ch.SampleLoops)
 
-	assert.Exactly(t, uint32(9), ch.SampleLoops[0].CuePointID)
-	assert.Exactly(t, uint32(10), ch.SampleLoops[0].Type)
-	assert.Exactly(t, uint32(11), ch.SampleLoops[0].Start)
-	assert.Exactly(t, uint32(12), ch.SampleLoops[0].End)
-	assert.Exactly(t, uint32(13), ch.SampleLoops[0].Fraction)
-	assert.Exactly(t, uint32(14), ch.SampleLoops[0].PlayCnt)
+	assert.Equal(t, uint32(9), ch.SampleLoops[0].CuePointID)
+	assert.Equal(t, uint32(10), ch.SampleLoops[0].Type)
+	assert.Equal(t, uint32(11), ch.SampleLoops[0].Start)
+	assert.Equal(t, uint32(12), ch.SampleLoops[0].End)
+	assert.Equal(t, uint32(13), ch.SampleLoops[0].Fraction)
+	assert.Equal(t, uint32(14), ch.SampleLoops[0].PlayCnt)
 
-	assert.Exactly(t, []byte{0, 1, 2}, kit.ReadAll(t, ch.SamplerData()))
+	assert.Equal(t, []byte{0, 1, 2}, must.Value(io.ReadAll(ch.SamplerData())))
 	assert.True(t, test.IsAllRead(src))
 }
 
@@ -225,25 +225,25 @@ func Test_ChunkSMPL_ReadFrom_WithLoops(t *testing.T) {
 	// --- Then ---
 	assert.NoError(t, err)
 
-	assert.Exactly(t, int64(64), n)
-	assert.Exactly(t, uint32(60), ch.Size())
-	assert.Exactly(t, uint32(1), ch.Manufacturer)
-	assert.Exactly(t, uint32(2), ch.Product)
-	assert.Exactly(t, uint32(3), ch.SamplePeriod)
-	assert.Exactly(t, uint32(4), ch.MIDIUnityNote)
-	assert.Exactly(t, uint32(5), ch.MIDIPitchFraction)
-	assert.Exactly(t, uint32(6), ch.SMPTEFormat)
-	assert.Exactly(t, uint32(7), ch.SMPTEOffset)
-	assert.Exactly(t, uint32(1), ch.SampleLoopCnt)
-	assert.Exactly(t, uint32(24), ch.SamplerDataCnt)
-	require.Len(t, ch.SampleLoops, 1)
-	assert.Exactly(t, uint32(9), ch.SampleLoops[0].CuePointID)
-	assert.Exactly(t, uint32(10), ch.SampleLoops[0].Type)
-	assert.Exactly(t, uint32(11), ch.SampleLoops[0].Start)
-	assert.Exactly(t, uint32(12), ch.SampleLoops[0].End)
-	assert.Exactly(t, uint32(13), ch.SampleLoops[0].Fraction)
-	assert.Exactly(t, uint32(14), ch.SampleLoops[0].PlayCnt)
-	assert.Exactly(t, []byte{}, kit.ReadAll(t, ch.SamplerData()))
+	assert.Equal(t, int64(64), n)
+	assert.Equal(t, uint32(60), ch.Size())
+	assert.Equal(t, uint32(1), ch.Manufacturer)
+	assert.Equal(t, uint32(2), ch.Product)
+	assert.Equal(t, uint32(3), ch.SamplePeriod)
+	assert.Equal(t, uint32(4), ch.MIDIUnityNote)
+	assert.Equal(t, uint32(5), ch.MIDIPitchFraction)
+	assert.Equal(t, uint32(6), ch.SMPTEFormat)
+	assert.Equal(t, uint32(7), ch.SMPTEOffset)
+	assert.Equal(t, uint32(1), ch.SampleLoopCnt)
+	assert.Equal(t, uint32(24), ch.SamplerDataCnt)
+	assert.Len(t, 1, ch.SampleLoops)
+	assert.Equal(t, uint32(9), ch.SampleLoops[0].CuePointID)
+	assert.Equal(t, uint32(10), ch.SampleLoops[0].Type)
+	assert.Equal(t, uint32(11), ch.SampleLoops[0].Start)
+	assert.Equal(t, uint32(12), ch.SampleLoops[0].End)
+	assert.Equal(t, uint32(13), ch.SampleLoops[0].Fraction)
+	assert.Equal(t, uint32(14), ch.SampleLoops[0].PlayCnt)
+	assert.Equal(t, []byte{}, must.Value(io.ReadAll(ch.SamplerData())))
 	assert.True(t, test.IsAllRead(src))
 }
 
@@ -258,7 +258,7 @@ func Test_ChunkSMPL_ReadFrom_Errors(t *testing.T) {
 		_, err := SMPL().ReadFrom(io.LimitReader(src, int64(i)))
 
 		// --- Then ---
-		assert.Error(t, err, "i=%d", i)
+		assert.Error(t, err)
 	}
 }
 
@@ -291,17 +291,17 @@ func Test_ChunkSMPL_Reset(t *testing.T) {
 	ch.Reset()
 
 	// --- Then ---
-	assert.Exactly(t, uint32(0), ch.Manufacturer)
-	assert.Exactly(t, uint32(0), ch.Product)
-	assert.Exactly(t, uint32(0), ch.SamplePeriod)
-	assert.Exactly(t, uint32(0), ch.MIDIUnityNote)
-	assert.Exactly(t, uint32(0), ch.MIDIPitchFraction)
-	assert.Exactly(t, uint32(0), ch.SMPTEFormat)
-	assert.Exactly(t, uint32(0), ch.SMPTEOffset)
-	assert.Exactly(t, uint32(0), ch.SampleLoopCnt)
-	assert.Exactly(t, uint32(0), ch.SamplerDataCnt)
-	assert.Len(t, ch.SampleLoops, 0)
-	assert.Exactly(t, []byte{}, kit.ReadAll(t, ch.SamplerData()))
+	assert.Equal(t, uint32(0), ch.Manufacturer)
+	assert.Equal(t, uint32(0), ch.Product)
+	assert.Equal(t, uint32(0), ch.SamplePeriod)
+	assert.Equal(t, uint32(0), ch.MIDIUnityNote)
+	assert.Equal(t, uint32(0), ch.MIDIPitchFraction)
+	assert.Equal(t, uint32(0), ch.SMPTEFormat)
+	assert.Equal(t, uint32(0), ch.SMPTEOffset)
+	assert.Equal(t, uint32(0), ch.SampleLoopCnt)
+	assert.Equal(t, uint32(0), ch.SamplerDataCnt)
+	assert.Len(t, 0, ch.SampleLoops)
+	assert.Equal(t, []byte{}, must.Value(io.ReadAll(ch.SamplerData())))
 }
 
 func Test_ChunkSMPL_WriteTo(t *testing.T) {
@@ -325,18 +325,18 @@ func Test_ChunkSMPL_WriteTo(t *testing.T) {
 
 			ch := SMPL()
 			_, err := ch.ReadFrom(src)
-			require.NoError(t, err, tc.testN)
+			assert.NoError(t, err)
 
 			// --- When ---
 			dst := &bytes.Buffer{}
 			n, err := ch.WriteTo(dst)
 
 			// --- Then ---
-			assert.NoError(t, err, tc.testN)
-			assert.Exactly(t, tc.n, n, tc.testN)
+			assert.NoError(t, err)
+			assert.Equal(t, tc.n, n)
 
-			exp := kit.ReadAll(t, tc.ch(t))
-			assert.Exactly(t, exp, dst.Bytes(), tc.testN)
+			exp := must.Value(io.ReadAll(tc.ch(t)))
+			assert.Equal(t, exp, dst.Bytes())
 		})
 	}
 }
@@ -350,13 +350,17 @@ func Test_ChunkSMPL_WriteTo_Errors(t *testing.T) {
 
 		ch := SMPL()
 		_, err := ch.ReadFrom(src)
-		assert.NoError(t, err, "i=%d", i)
+		if !assert.NoError(t, err) {
+			t.Logf("errro i=%d", i)
+		}
 
 		// --- When ---
 		dst := &bytes.Buffer{}
 		_, err = ch.WriteTo(kit.ErrWriter(dst, i, nil))
 
 		// --- Then ---
-		assert.Error(t, err, "i=%d", i)
+		if !assert.Error(t, err) {
+			t.Logf("errro i=%d", i)
+		}
 	}
 }

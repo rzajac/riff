@@ -6,9 +6,9 @@ import (
 	"testing"
 	"time"
 
+	"github.com/ctx42/testing/pkg/assert"
+	"github.com/ctx42/testing/pkg/must"
 	kit "github.com/rzajac/testkit"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 
 	"github.com/rzajac/riff/internal/test"
 )
@@ -87,9 +87,9 @@ func Test_ChunkFMT_FMT(t *testing.T) {
 	ch := FMT()
 
 	// --- Then ---
-	assert.Exactly(t, IDfmt, ch.ID())
-	assert.Exactly(t, uint32(16), ch.Size())
-	assert.Exactly(t, uint32(0), ch.Type())
+	assert.Equal(t, IDfmt, ch.ID())
+	assert.Equal(t, uint32(16), ch.Size())
+	assert.Equal(t, uint32(0), ch.Type())
 	assert.False(t, ch.Multi())
 	assert.Nil(t, ch.Chunks())
 	assert.False(t, ch.Raw())
@@ -108,15 +108,15 @@ func Test_ChunkFMT_ReadFrom(t *testing.T) {
 	// --- Then ---
 	assert.NoError(t, err)
 
-	assert.Exactly(t, int64(20), n)
-	assert.Exactly(t, uint32(16), ch.Size())
-	assert.Exactly(t, CompPCM, ch.CompCode)
-	assert.Exactly(t, uint16(1), ch.ChannelCnt)
-	assert.Exactly(t, uint32(44100), ch.SampleRate)
-	assert.Exactly(t, uint32(88200), ch.AvgByteRate)
-	assert.Exactly(t, uint16(2), ch.BlockAlign)
-	assert.Exactly(t, uint16(16), ch.BitsPerSample)
-	assert.Exactly(t, []byte(nil), ch.extra)
+	assert.Equal(t, int64(20), n)
+	assert.Equal(t, uint32(16), ch.Size())
+	assert.Equal(t, CompPCM, ch.CompCode)
+	assert.Equal(t, uint16(1), ch.ChannelCnt)
+	assert.Equal(t, uint32(44100), ch.SampleRate)
+	assert.Equal(t, uint32(88200), ch.AvgByteRate)
+	assert.Equal(t, uint16(2), ch.BlockAlign)
+	assert.Equal(t, uint16(16), ch.BitsPerSample)
+	assert.Equal(t, []byte(nil), ch.extra)
 	assert.True(t, test.IsAllRead(src))
 }
 
@@ -132,15 +132,15 @@ func Test_ChunkFMT_ReadFrom_ExtraBytesEven(t *testing.T) {
 	// --- Then ---
 	assert.NoError(t, err)
 
-	assert.Exactly(t, int64(24), n)
-	assert.Exactly(t, uint32(20), ch.Size())
-	assert.Exactly(t, CompPCM, ch.CompCode)
-	assert.Exactly(t, uint16(1), ch.ChannelCnt)
-	assert.Exactly(t, uint32(44100), ch.SampleRate)
-	assert.Exactly(t, uint32(88200), ch.AvgByteRate)
-	assert.Exactly(t, uint16(2), ch.BlockAlign)
-	assert.Exactly(t, uint16(16), ch.BitsPerSample)
-	assert.Exactly(t, []byte{0, 1}, ch.extra)
+	assert.Equal(t, int64(24), n)
+	assert.Equal(t, uint32(20), ch.Size())
+	assert.Equal(t, CompPCM, ch.CompCode)
+	assert.Equal(t, uint16(1), ch.ChannelCnt)
+	assert.Equal(t, uint32(44100), ch.SampleRate)
+	assert.Equal(t, uint32(88200), ch.AvgByteRate)
+	assert.Equal(t, uint16(2), ch.BlockAlign)
+	assert.Equal(t, uint16(16), ch.BitsPerSample)
+	assert.Equal(t, []byte{0, 1}, ch.extra)
 	assert.True(t, test.IsAllRead(src))
 }
 
@@ -156,15 +156,15 @@ func Test_ChunkFMT_ReadFrom_ExtraBytesOdd(t *testing.T) {
 	// --- Then ---
 	assert.NoError(t, err)
 
-	assert.Exactly(t, int64(26), n)
-	assert.Exactly(t, uint32(22), ch.Size())
-	assert.Exactly(t, CompPCM, ch.CompCode)
-	assert.Exactly(t, uint16(1), ch.ChannelCnt)
-	assert.Exactly(t, uint32(44100), ch.SampleRate)
-	assert.Exactly(t, uint32(88200), ch.AvgByteRate)
-	assert.Exactly(t, uint16(2), ch.BlockAlign)
-	assert.Exactly(t, uint16(16), ch.BitsPerSample)
-	assert.Exactly(t, []byte{0, 1, 2}, ch.extra)
+	assert.Equal(t, int64(26), n)
+	assert.Equal(t, uint32(22), ch.Size())
+	assert.Equal(t, CompPCM, ch.CompCode)
+	assert.Equal(t, uint16(1), ch.ChannelCnt)
+	assert.Equal(t, uint32(44100), ch.SampleRate)
+	assert.Equal(t, uint32(88200), ch.AvgByteRate)
+	assert.Equal(t, uint16(2), ch.BlockAlign)
+	assert.Equal(t, uint16(16), ch.BitsPerSample)
+	assert.Equal(t, []byte{0, 1, 2}, ch.extra)
 	assert.True(t, test.IsAllRead(src))
 }
 
@@ -179,7 +179,9 @@ func Test_ChunkFMT_ReadFrom_Errors(t *testing.T) {
 		_, err := FMT().ReadFrom(io.LimitReader(src, int64(i)))
 
 		// --- Then ---
-		assert.Error(t, err, "i=%d", i)
+		if !assert.Error(t, err) {
+			t.Logf("errro i=%d", i)
+		}
 	}
 }
 
@@ -195,15 +197,15 @@ func Test_ChunkFMT_ReadFrom_ExtraBytesOfZeroLength(t *testing.T) {
 	// --- Then ---
 	assert.NoError(t, err)
 
-	assert.Exactly(t, int64(22), n)
-	assert.Exactly(t, uint32(18), ch.Size())
-	assert.Exactly(t, CompPCM, ch.CompCode)
-	assert.Exactly(t, uint16(1), ch.ChannelCnt)
-	assert.Exactly(t, uint32(44100), ch.SampleRate)
-	assert.Exactly(t, uint32(88200), ch.AvgByteRate)
-	assert.Exactly(t, uint16(2), ch.BlockAlign)
-	assert.Exactly(t, uint16(16), ch.BitsPerSample)
-	assert.Exactly(t, []byte(nil), ch.extra)
+	assert.Equal(t, int64(22), n)
+	assert.Equal(t, uint32(18), ch.Size())
+	assert.Equal(t, CompPCM, ch.CompCode)
+	assert.Equal(t, uint16(1), ch.ChannelCnt)
+	assert.Equal(t, uint32(44100), ch.SampleRate)
+	assert.Equal(t, uint32(88200), ch.AvgByteRate)
+	assert.Equal(t, uint16(2), ch.BlockAlign)
+	assert.Equal(t, uint16(16), ch.BitsPerSample)
+	assert.Equal(t, []byte(nil), ch.extra)
 	assert.True(t, test.IsAllRead(src))
 }
 
@@ -217,8 +219,8 @@ func Test_ChunkFMT_ReadFrom_SizeLessThen16Error(t *testing.T) {
 	n, err := ch.ReadFrom(src)
 
 	// --- Then ---
-	kit.AssertErrPrefix(t, err, "error decoding fmt  chunk: ")
-	assert.Exactly(t, int64(4), n)
+	assert.ErrorContain(t, "error decoding fmt  chunk: ", err)
+	assert.Equal(t, int64(4), n)
 }
 
 func Test_ChunkFMT_ReadFrom_LimitReaderError(t *testing.T) {
@@ -232,8 +234,8 @@ func Test_ChunkFMT_ReadFrom_LimitReaderError(t *testing.T) {
 	n, err := ch.ReadFrom(src)
 
 	// --- Then ---
-	assert.ErrorIs(t, err, kit.ErrTestError)
-	assert.Exactly(t, int64(24), n)
+	assert.ErrorIs(t, kit.ErrTestError, err)
+	assert.Equal(t, int64(24), n)
 }
 
 func Test_ChunkFMT_Reset(t *testing.T) {
@@ -243,21 +245,21 @@ func Test_ChunkFMT_Reset(t *testing.T) {
 
 	ch := FMT()
 	_, err := ch.ReadFrom(src)
-	require.NoError(t, err)
+	assert.NoError(t, err)
 
 	// --- When ---
 	ch.Reset()
 
 	// --- Then ---
-	assert.Exactly(t, uint32(16), ch.Size())
-	assert.Exactly(t, CompNone, ch.CompCode)
-	assert.Exactly(t, uint16(0), ch.ChannelCnt)
-	assert.Exactly(t, uint32(0), ch.SampleRate)
-	assert.Exactly(t, uint32(0), ch.AvgByteRate)
-	assert.Exactly(t, uint16(0), ch.BlockAlign)
-	assert.Exactly(t, uint16(0), ch.BitsPerSample)
+	assert.Equal(t, uint32(16), ch.Size())
+	assert.Equal(t, CompNone, ch.CompCode)
+	assert.Equal(t, uint16(0), ch.ChannelCnt)
+	assert.Equal(t, uint32(0), ch.SampleRate)
+	assert.Equal(t, uint32(0), ch.AvgByteRate)
+	assert.Equal(t, uint16(0), ch.BlockAlign)
+	assert.Equal(t, uint16(0), ch.BitsPerSample)
 	assert.False(t, ch.WriteZeroExtra)
-	assert.Len(t, ch.extra, 0)
+	assert.Len(t, 0, ch.extra)
 	assert.True(t, test.IsAllRead(src))
 }
 
@@ -282,18 +284,18 @@ func Test_ChunkFMT_WriteTo(t *testing.T) {
 
 			ch := FMT()
 			_, err := ch.ReadFrom(src)
-			require.NoError(t, err, tc.testN)
+			assert.NoError(t, err)
 
 			// --- When ---
 			dst := &bytes.Buffer{}
 			n, err := ch.WriteTo(dst)
 
 			// --- Then ---
-			assert.NoError(t, err, tc.testN)
-			assert.Exactly(t, tc.n, n, tc.testN)
+			assert.NoError(t, err)
+			assert.Equal(t, tc.n, n)
 
-			exp := kit.ReadAll(t, tc.ch(t))
-			assert.Exactly(t, exp, dst.Bytes(), tc.testN)
+			exp := must.Value(io.ReadAll(tc.ch(t)))
+			assert.Equal(t, exp, dst.Bytes())
 		})
 	}
 }
@@ -307,14 +309,18 @@ func Test_ChunkFMT_WriteTo_Errors(t *testing.T) {
 
 		ch := FMT()
 		_, err := ch.ReadFrom(src)
-		assert.NoError(t, err, "i=%d", i)
+		if !assert.NoError(t, err) {
+			t.Logf("errro i=%d", i)
+		}
 
 		// --- When ---
 		dst := &bytes.Buffer{}
 		_, err = ch.WriteTo(kit.ErrWriter(dst, i, nil))
 
 		// --- Then ---
-		assert.Error(t, err, "i=%d", i)
+		if !assert.Error(t, err) {
+			t.Logf("errro i=%d", i)
+		}
 	}
 }
 
@@ -351,14 +357,14 @@ func Test_ChunkFMT_SetExtra(t *testing.T) {
 
 			ch := FMT()
 			_, err := ch.ReadFrom(src)
-			assert.NoError(t, err, tc.testN)
+			assert.NoError(t, err)
 
 			// --- When ---
 			ch.SetExtra(tc.extra)
 
 			// --- Then ---
-			assert.Exactly(t, tc.extra, kit.ReadAll(t, ch.Extra()), tc.testN)
-			assert.Exactly(t, tc.expSize, ch.Size(), tc.testN)
+			assert.Equal(t, tc.extra, must.Value(io.ReadAll(ch.Extra())))
+			assert.Equal(t, tc.expSize, ch.Size())
 		})
 	}
 }
@@ -390,17 +396,18 @@ func Test_ChunkFMT_CreateAndWrite(t *testing.T) {
 			// --- When ---
 			// Setting format extra bytes.
 			ch.SetExtra(tc.extra)
-			assert.Exactly(t, uint32(tc.n-8), ch.Size(), tc.testN)
+			assert.Equal(t, uint32(tc.n-8), ch.Size())
 
 			// Writing the chunk.
 			dst := &bytes.Buffer{}
 			n, err := ch.WriteTo(dst)
 
 			// --- Then ---
-			assert.NoError(t, err, tc.testN)
-			assert.Exactly(t, tc.n, n, tc.testN)
-			exp := kit.ReadAll(t, tc.ch(t))
-			assert.Exactly(t, exp, dst.Bytes(), tc.testN)
+			assert.NoError(t, err)
+			assert.Equal(t, tc.n, n)
+
+			exp := must.Value(io.ReadAll(tc.ch(t)))
+			assert.Equal(t, exp, dst.Bytes())
 		})
 	}
 }
@@ -418,5 +425,5 @@ func Test_ChunkFMT_Duration(t *testing.T) {
 	d := ch.Duration(88200)
 
 	// --- Then ---
-	assert.Exactly(t, time.Second, d)
+	assert.Equal(t, time.Second, d)
 }

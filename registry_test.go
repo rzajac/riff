@@ -3,7 +3,7 @@ package riff
 import (
 	"testing"
 
-	"github.com/stretchr/testify/assert"
+	"github.com/ctx42/testing/pkg/assert"
 )
 
 func Test_Registry_Register_Get(t *testing.T) {
@@ -14,8 +14,8 @@ func Test_Registry_Register_Get(t *testing.T) {
 	reg.Register(IDfmt, FMTMake)
 
 	// --- Then ---
-	assert.IsType(t, &ChunkFMT{}, reg.Get(IDfmt))
-	assert.IsType(t, &ChunkRAWC{}, reg.Get(IDUNKN))
+	assert.Type(t, &ChunkFMT{}, reg.Get(IDfmt))
+	assert.Type(t, &ChunkRAWC{}, reg.Get(IDUNKN))
 }
 
 func Test_Registry_Get_Reuse(t *testing.T) {

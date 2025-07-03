@@ -5,9 +5,10 @@ import (
 	"io"
 	"testing"
 
+	"github.com/ctx42/testing/pkg/assert"
+	"github.com/ctx42/testing/pkg/must"
 	"github.com/rzajac/flexbuf"
 	kit "github.com/rzajac/testkit"
-	"github.com/stretchr/testify/assert"
 )
 
 func Test_StrToID(t *testing.T) {
@@ -58,7 +59,7 @@ func Test_StrToID(t *testing.T) {
 			got := StrToID(tc.id)
 
 			// --- Then ---
-			assert.Exactly(t, tc.exp, got, "test %s", tc.id)
+			assert.Equal(t, tc.exp, got)
 		})
 	}
 }
@@ -73,7 +74,7 @@ func Test_ReadChunkID(t *testing.T) {
 
 	// --- Then ---
 	assert.NoError(t, err)
-	assert.Exactly(t, uint32(0x41424344), id)
+	assert.Equal(t, uint32(0x41424344), id)
 }
 
 func Test_ReadChunkID_Error(t *testing.T) {
@@ -87,7 +88,7 @@ func Test_ReadChunkID_Error(t *testing.T) {
 
 	// --- Then ---
 	assert.ErrorIs(t, err, kit.ErrTestError)
-	assert.Exactly(t, uint32(0), id)
+	assert.Equal(t, uint32(0), id)
 }
 
 func Test_ReadChunkSize(t *testing.T) {
@@ -99,7 +100,7 @@ func Test_ReadChunkSize(t *testing.T) {
 
 	// --- Then ---
 	assert.NoError(t, err)
-	assert.Exactly(t, uint32(0x10), size)
+	assert.Equal(t, uint32(0x10), size)
 }
 
 func Test_ReadChunkSize_Error(t *testing.T) {
@@ -112,7 +113,7 @@ func Test_ReadChunkSize_Error(t *testing.T) {
 
 	// --- Then ---
 	assert.ErrorIs(t, err, kit.ErrTestError)
-	assert.Exactly(t, uint32(0), size)
+	assert.Equal(t, uint32(0), size)
 }
 
 func Test_LimitedRead(t *testing.T) {
@@ -125,7 +126,7 @@ func Test_LimitedRead(t *testing.T) {
 
 	// --- Then ---
 	assert.NoError(t, err)
-	assert.Exactly(t, []byte{0, 1, 2}, kit.ReadAllFromStart(t, dst))
+	assert.Equal(t, []byte{0, 1, 2}, kit.ReadAllFromStart(t, dst))
 }
 
 func Test_LimitedRead_ErrUnexpectedEOF(t *testing.T) {
@@ -165,7 +166,7 @@ func Test_SkipN_BlackHole(t *testing.T) {
 	// --- Then ---
 	assert.NoError(t, err)
 	exp := []byte{20, 21, 22, 23, 24, 25, 26, 27, 28, 29}
-	assert.Exactly(t, exp, kit.ReadAll(t, buf))
+	assert.Equal(t, exp, must.Value(io.ReadAll(buf)))
 }
 
 func Test_SkipN_BlackHole_Error(t *testing.T) {
@@ -187,7 +188,7 @@ func Test_SkipN_BlackHole_Error(t *testing.T) {
 		0x14, 0x15, 0x16, 0x17, 0x18,
 		0x19, 0x1a, 0x1b, 0x1c, 0x1d,
 	}
-	assert.Exactly(t, exp, kit.ReadAll(t, buf))
+	assert.Equal(t, exp, must.Value(io.ReadAll(buf)))
 }
 
 func Test_SkipN_Seek(t *testing.T) {
@@ -204,12 +205,12 @@ func Test_SkipN_Seek(t *testing.T) {
 	// --- Then ---
 	assert.NoError(t, err)
 	exp := []byte{20, 21, 22, 23, 24, 25, 26, 27, 28, 29}
-	assert.Exactly(t, exp, kit.ReadAll(t, buf))
+	assert.Equal(t, exp, must.Value(io.ReadAll(buf)))
 }
 
 func Test_RealSize(t *testing.T) {
-	assert.Exactly(t, uint32(124), RealSize(123))
-	assert.Exactly(t, uint32(124), RealSize(124))
+	assert.Equal(t, uint32(124), RealSize(123))
+	assert.Equal(t, uint32(124), RealSize(124))
 }
 
 func Test_ReadPaddingIf_OddSize(t *testing.T) {
@@ -221,7 +222,7 @@ func Test_ReadPaddingIf_OddSize(t *testing.T) {
 
 	// --- Then ---
 	assert.NoError(t, err)
-	assert.Exactly(t, int64(1), n)
+	assert.Equal(t, int64(1), n)
 }
 
 func Test_ReadPaddingIf_EvenSize(t *testing.T) {
@@ -233,7 +234,7 @@ func Test_ReadPaddingIf_EvenSize(t *testing.T) {
 
 	// --- Then ---
 	assert.NoError(t, err)
-	assert.Exactly(t, int64(0), n)
+	assert.Equal(t, int64(0), n)
 }
 
 func Test_ReadPaddingIf_ErrUnexpectedEOF(t *testing.T) {
@@ -245,7 +246,7 @@ func Test_ReadPaddingIf_ErrUnexpectedEOF(t *testing.T) {
 
 	// --- Then ---
 	assert.ErrorIs(t, err, io.ErrUnexpectedEOF)
-	assert.Exactly(t, int64(0), n)
+	assert.Equal(t, int64(0), n)
 }
 
 func Test_ReadPaddingIf_HandleEOF(t *testing.T) {
@@ -257,7 +258,7 @@ func Test_ReadPaddingIf_HandleEOF(t *testing.T) {
 
 	// --- Then ---
 	assert.NoError(t, err)
-	assert.Exactly(t, int64(1), n)
+	assert.Equal(t, int64(1), n)
 }
 
 func Test_WriteIDAndSize(t *testing.T) {
@@ -269,10 +270,10 @@ func Test_WriteIDAndSize(t *testing.T) {
 
 	// --- Then ---
 	assert.NoError(t, err)
-	assert.Exactly(t, int64(8), n)
+	assert.Equal(t, int64(8), n)
 
 	exp := []byte{0x52, 0x49, 0x46, 0x46, 0x7c, 0x0, 0x0, 0x0}
-	assert.Exactly(t, exp, dst.Bytes())
+	assert.Equal(t, exp, dst.Bytes())
 }
 
 func Test_WriteIDAndSize_ErrorWritingID(t *testing.T) {
@@ -285,10 +286,10 @@ func Test_WriteIDAndSize_ErrorWritingID(t *testing.T) {
 
 	// --- Then ---
 	assert.ErrorIs(t, err, kit.ErrTestError)
-	assert.Exactly(t, int64(0), n)
+	assert.Equal(t, int64(0), n)
 
 	exp := []byte{0x52, 0x49, 0x46}
-	assert.Exactly(t, exp, buf.Bytes())
+	assert.Equal(t, exp, buf.Bytes())
 }
 
 func Test_WriteIDAndSize_ErrorWritingSize(t *testing.T) {
@@ -301,10 +302,10 @@ func Test_WriteIDAndSize_ErrorWritingSize(t *testing.T) {
 
 	// --- Then ---
 	assert.ErrorIs(t, err, kit.ErrTestError)
-	assert.Exactly(t, int64(4), n)
+	assert.Equal(t, int64(4), n)
 
 	exp := []byte{0x52, 0x49, 0x46, 0x46, 0x7c}
-	assert.Exactly(t, exp, buf.Bytes())
+	assert.Equal(t, exp, buf.Bytes())
 }
 
 func Test_WritePaddingIf_OddSize(t *testing.T) {
@@ -316,10 +317,10 @@ func Test_WritePaddingIf_OddSize(t *testing.T) {
 
 	// --- Then ---
 	assert.NoError(t, err)
-	assert.Exactly(t, int64(1), n)
+	assert.Equal(t, int64(1), n)
 
 	exp := []byte{0x00}
-	assert.Exactly(t, exp, dst.Bytes())
+	assert.Equal(t, exp, dst.Bytes())
 }
 
 func Test_WritePaddingIf_EvenSize(t *testing.T) {
@@ -331,8 +332,8 @@ func Test_WritePaddingIf_EvenSize(t *testing.T) {
 
 	// --- Then ---
 	assert.NoError(t, err)
-	assert.Exactly(t, int64(0), n)
-	assert.Exactly(t, []byte(nil), dst.Bytes())
+	assert.Equal(t, int64(0), n)
+	assert.Equal(t, []byte(nil), dst.Bytes())
 }
 
 func Test_WritePaddingIf_Error(t *testing.T) {
@@ -345,8 +346,8 @@ func Test_WritePaddingIf_Error(t *testing.T) {
 
 	// --- Then ---
 	assert.ErrorIs(t, err, kit.ErrTestError)
-	assert.Exactly(t, int64(0), n)
-	assert.Exactly(t, []byte(nil), buf.Bytes())
+	assert.Equal(t, int64(0), n)
+	assert.Equal(t, []byte(nil), buf.Bytes())
 }
 
 func Test_TrimZeroRight(t *testing.T) {
@@ -366,7 +367,7 @@ func Test_TrimZeroRight(t *testing.T) {
 
 	for _, tc := range tt {
 		t.Run(tc.testN, func(t *testing.T) {
-			assert.Exactly(t, tc.exp, TrimZeroRight(tc.in), "test %s", tc.testN)
+			assert.Equal(t, tc.exp, TrimZeroRight(tc.in))
 		})
 	}
 }
@@ -376,5 +377,5 @@ func Test_linkids(t *testing.T) {
 	got := linkids(idRAWC, IDRIFF)
 
 	// --- Then ---
-	assert.Exactly(t, "RAWC:RIFF", got)
+	assert.Equal(t, "RAWC:RIFF", got)
 }

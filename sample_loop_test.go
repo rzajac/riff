@@ -3,7 +3,7 @@ package riff
 import (
 	"testing"
 
-	"github.com/stretchr/testify/assert"
+	"github.com/ctx42/testing/pkg/assert"
 )
 
 func Test_SampleLoop_Reset(t *testing.T) {
@@ -20,10 +20,10 @@ func Test_SampleLoop_Reset(t *testing.T) {
 	sl.Reset()
 
 	// --- Then ---
-	assert.Exactly(t, uint32(0), sl.CuePointID)
-	assert.Exactly(t, uint32(0), sl.Type)
-	assert.Exactly(t, uint32(0), sl.Start)
-	assert.Exactly(t, uint32(0), sl.End)
-	assert.Exactly(t, uint32(0), sl.Fraction)
-	assert.Exactly(t, uint32(0), sl.PlayCnt)
+	assert.Equal(t, uint32(0), sl.CuePointID)
+	assert.Equal(t, uint32(0), sl.Type)
+	assert.Equal(t, uint32(0), sl.Start)
+	assert.Equal(t, uint32(0), sl.End)
+	assert.Equal(t, uint32(0), sl.Fraction)
+	assert.Equal(t, uint32(0), sl.PlayCnt)
 }

@@ -5,9 +5,9 @@ import (
 	"io"
 	"testing"
 
+	"github.com/ctx42/testing/pkg/assert"
+	"github.com/ctx42/testing/pkg/must"
 	kit "github.com/rzajac/testkit"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 
 	"github.com/rzajac/riff/internal/test"
 )
@@ -67,9 +67,9 @@ func Test_ChunkLIST_LIST(t *testing.T) {
 	ch := LIST(LoadData, reg)
 
 	// --- Then ---
-	assert.Exactly(t, IDLIST, ch.ID())
-	assert.Exactly(t, uint32(0), ch.Size())
-	assert.Exactly(t, uint32(0), ch.Type())
+	assert.Equal(t, IDLIST, ch.ID())
+	assert.Equal(t, uint32(0), ch.Size())
+	assert.Equal(t, uint32(0), ch.Type())
 	assert.True(t, ch.Multi())
 	assert.Nil(t, ch.Chunks())
 	assert.False(t, ch.Raw())
@@ -88,13 +88,13 @@ func Test_ChunkLIST_Type_INFO(t *testing.T) {
 
 	// --- Then ---
 	assert.NoError(t, err)
-	assert.Exactly(t, int64(20), n)
-	assert.Exactly(t, IDINFO, ch.Type())
-	require.Len(t, ch.Chunks(), 1)
+	assert.Equal(t, int64(20), n)
+	assert.Equal(t, IDINFO, ch.Type())
+	assert.Len(t, 1, ch.Chunks())
 
 	sub := ch.Chunks()[0]
-	assert.IsType(t, &ChunkINFO{}, sub)
-	assert.Exactly(t, LabIART, sub.ID())
+	assert.Type(t, &ChunkINFO{}, sub)
+	assert.Equal(t, LabIART, sub.ID())
 }
 
 func Test_ChunkLIST_Type_adtl(t *testing.T) {
@@ -110,17 +110,17 @@ func Test_ChunkLIST_Type_adtl(t *testing.T) {
 
 	// --- Then ---
 	assert.NoError(t, err)
-	assert.Exactly(t, int64(56), n)
-	assert.Exactly(t, IDadtl, ch.Type())
-	require.Len(t, ch.Chunks(), 2)
+	assert.Equal(t, int64(56), n)
+	assert.Equal(t, IDadtl, ch.Type())
+	assert.Len(t, 2, ch.Chunks())
 
 	sub := ch.Chunks()[0]
-	assert.IsType(t, &ChunkLABL{}, sub)
-	assert.Exactly(t, IDlabl, sub.ID())
+	assert.Type(t, &ChunkLABL{}, sub)
+	assert.Equal(t, IDlabl, sub.ID())
 
 	sub = ch.Chunks()[1]
-	assert.IsType(t, &ChunkLTXT{}, sub)
-	assert.Exactly(t, IDltxt, sub.ID())
+	assert.Type(t, &ChunkLTXT{}, sub)
+	assert.Equal(t, IDltxt, sub.ID())
 }
 
 func Test_ChunkLIST_Type_unknown(t *testing.T) {
@@ -136,13 +136,13 @@ func Test_ChunkLIST_Type_unknown(t *testing.T) {
 
 	// --- Then ---
 	assert.NoError(t, err)
-	assert.Exactly(t, int64(20), n)
-	assert.Exactly(t, IDUNKN, ch.Type())
-	require.Len(t, ch.Chunks(), 1)
+	assert.Equal(t, int64(20), n)
+	assert.Equal(t, IDUNKN, ch.Type())
+	assert.Len(t, 1, ch.Chunks())
 
 	sub := ch.Chunks()[0]
-	assert.IsType(t, &ChunkRAWC{}, sub)
-	assert.Exactly(t, LabIART, sub.ID())
+	assert.Type(t, &ChunkRAWC{}, sub)
+	assert.Equal(t, LabIART, sub.ID())
 }
 
 func Test_ChunkLIST_ReadFrom_Errors(t *testing.T) {
@@ -157,7 +157,9 @@ func Test_ChunkLIST_ReadFrom_Errors(t *testing.T) {
 		_, err := LIST(LoadData, reg).ReadFrom(io.LimitReader(src, int64(i)))
 
 		// --- Then ---
-		assert.Error(t, err, "i=%d", i)
+		if !assert.Error(t, err) {
+			t.Logf("errro i=%d", i)
+		}
 	}
 }
 
@@ -182,18 +184,18 @@ func Test_ChunkLIST_WriteTo(t *testing.T) {
 
 			ch := LIST(LoadData, reg)
 			_, err := ch.ReadFrom(src)
-			require.NoError(t, err, tc.testN)
+			assert.NoError(t, err)
 
 			// --- When ---
 			dst := &bytes.Buffer{}
 			n, err := ch.WriteTo(dst)
 
 			// --- Then ---
-			assert.NoError(t, err, tc.testN)
-			assert.Exactly(t, tc.n, n, tc.testN)
+			assert.NoError(t, err)
+			assert.Equal(t, tc.n, n)
 
-			exp := kit.ReadAll(t, tc.ch(t))
-			assert.Exactly(t, exp, dst.Bytes(), tc.testN)
+			exp := must.Value(io.ReadAll(tc.ch(t)))
+			assert.Equal(t, exp, dst.Bytes())
 		})
 	}
 }
@@ -209,14 +211,18 @@ func Test_ChunkLIST_WriteTo_Errors(t *testing.T) {
 
 		ch := LIST(LoadData, reg)
 		_, err := ch.ReadFrom(src)
-		assert.NoError(t, err, "i=%d", i)
+		if !assert.NoError(t, err) {
+			t.Logf("errro i=%d", i)
+		}
 
 		// --- When ---
 		dst := &bytes.Buffer{}
 		_, err = ch.WriteTo(kit.ErrWriter(dst, i, nil))
 
 		// --- Then ---
-		assert.Error(t, err, "i=%d", i)
+		if !assert.Error(t, err) {
+			t.Logf("errro i=%d", i)
+		}
 	}
 }
 
@@ -228,15 +234,15 @@ func Test_ChunkLIST_Reset(t *testing.T) {
 
 	ch := LIST(LoadData, reg)
 	_, err := ch.ReadFrom(src)
-	require.NoError(t, err)
+	assert.NoError(t, err)
 
 	// --- When ---
 	ch.Reset()
 
 	// --- Then ---
-	assert.Exactly(t, uint32(0), ch.Size())
-	assert.Exactly(t, uint32(0), ch.ListType)
-	assert.Len(t, ch.Chunks(), 0)
+	assert.Equal(t, uint32(0), ch.Size())
+	assert.Equal(t, uint32(0), ch.ListType)
+	assert.Len(t, 0, ch.Chunks())
 }
 
 func Test_ChunkLIST_Modify(t *testing.T) {
@@ -258,8 +264,8 @@ func Test_ChunkLIST_Modify(t *testing.T) {
 		ch.Modify(chs.Remove(IDltxt))
 
 		// --- Then ---
-		assert.Exactly(t, size-(txt.Size()+8), ch.Size())
-		assert.Exactly(t, 1, len(ch.Chunks().IDs()))
+		assert.Equal(t, size-(txt.Size()+8), ch.Size())
+		assert.Equal(t, 1, len(ch.Chunks().IDs()))
 		assert.Nil(t, ch.Chunks().First(IDltxt))
 	})
 }

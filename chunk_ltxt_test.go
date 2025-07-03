@@ -5,9 +5,9 @@ import (
 	"io"
 	"testing"
 
+	"github.com/ctx42/testing/pkg/assert"
+	"github.com/ctx42/testing/pkg/must"
 	kit "github.com/rzajac/testkit"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 
 	"github.com/rzajac/riff/internal/test"
 )
@@ -50,9 +50,9 @@ func Test_ChunkLTXT_LTXT(t *testing.T) {
 	ch := LTXT()
 
 	// --- Then ---
-	assert.Exactly(t, IDltxt, ch.ID())
-	assert.Exactly(t, uint32(0), ch.Size())
-	assert.Exactly(t, uint32(0), ch.Type())
+	assert.Equal(t, IDltxt, ch.ID())
+	assert.Equal(t, uint32(0), ch.Size())
+	assert.Equal(t, uint32(0), ch.Type())
 	assert.True(t, ch.Multi())
 	assert.Nil(t, ch.Chunks())
 	assert.False(t, ch.Raw())
@@ -70,18 +70,18 @@ func Test_ChunkLTXT_ReadFrom_TextLenEven(t *testing.T) {
 	// --- Then ---
 	assert.NoError(t, err)
 
-	assert.Exactly(t, int64(28), n)
-	assert.Exactly(t, IDltxt, ch.ID())
-	assert.Exactly(t, uint32(24), ch.Size())
-	assert.Exactly(t, uint32(1), ch.CuePointID)
-	assert.Exactly(t, uint32(2), ch.SamLen)
-	assert.Exactly(t, uint32(3), ch.PurID)
-	assert.Exactly(t, uint16(4), ch.Country)
-	assert.Exactly(t, uint16(5), ch.Language)
-	assert.Exactly(t, uint16(6), ch.Dialect)
-	assert.Exactly(t, uint16(7), ch.CodePage)
-	assert.Exactly(t, []byte{'a', 'b', 'c', 0}, ch.text)
-	assert.Exactly(t, []byte{'a', 'b', 'c'}, kit.ReadAll(t, ch.Text()))
+	assert.Equal(t, int64(28), n)
+	assert.Equal(t, IDltxt, ch.ID())
+	assert.Equal(t, uint32(24), ch.Size())
+	assert.Equal(t, uint32(1), ch.CuePointID)
+	assert.Equal(t, uint32(2), ch.SamLen)
+	assert.Equal(t, uint32(3), ch.PurID)
+	assert.Equal(t, uint16(4), ch.Country)
+	assert.Equal(t, uint16(5), ch.Language)
+	assert.Equal(t, uint16(6), ch.Dialect)
+	assert.Equal(t, uint16(7), ch.CodePage)
+	assert.Equal(t, []byte{'a', 'b', 'c', 0}, ch.text)
+	assert.Equal(t, []byte{'a', 'b', 'c'}, must.Value(io.ReadAll(ch.Text())))
 	assert.True(t, test.IsAllRead(src))
 }
 
@@ -97,18 +97,18 @@ func Test_ChunkLTXT_ReadFrom_TextLenOdd(t *testing.T) {
 	// --- Then ---
 	assert.NoError(t, err)
 
-	assert.Exactly(t, int64(28), n)
-	assert.Exactly(t, IDltxt, ch.ID())
-	assert.Exactly(t, uint32(23), ch.Size())
-	assert.Exactly(t, uint32(1), ch.CuePointID)
-	assert.Exactly(t, uint32(2), ch.SamLen)
-	assert.Exactly(t, uint32(3), ch.PurID)
-	assert.Exactly(t, uint16(4), ch.Country)
-	assert.Exactly(t, uint16(5), ch.Language)
-	assert.Exactly(t, uint16(6), ch.Dialect)
-	assert.Exactly(t, uint16(7), ch.CodePage)
-	assert.Exactly(t, []byte{'a', 'b', 0}, ch.text)
-	assert.Exactly(t, []byte{'a', 'b'}, kit.ReadAll(t, ch.Text()))
+	assert.Equal(t, int64(28), n)
+	assert.Equal(t, IDltxt, ch.ID())
+	assert.Equal(t, uint32(23), ch.Size())
+	assert.Equal(t, uint32(1), ch.CuePointID)
+	assert.Equal(t, uint32(2), ch.SamLen)
+	assert.Equal(t, uint32(3), ch.PurID)
+	assert.Equal(t, uint16(4), ch.Country)
+	assert.Equal(t, uint16(5), ch.Language)
+	assert.Equal(t, uint16(6), ch.Dialect)
+	assert.Equal(t, uint16(7), ch.CodePage)
+	assert.Equal(t, []byte{'a', 'b', 0}, ch.text)
+	assert.Equal(t, []byte{'a', 'b'}, kit.ReadAll(t, ch.Text()))
 	assert.True(t, test.IsAllRead(src))
 }
 
@@ -123,7 +123,7 @@ func Test_ChunkLTXT_ReadFrom_Errors(t *testing.T) {
 		_, err := LTXT().ReadFrom(io.LimitReader(src, int64(i)))
 
 		// --- Then ---
-		assert.Error(t, err, "i=%d", i)
+		assert.Error(t, err)
 	}
 }
 
@@ -146,18 +146,18 @@ func Test_ChunkLTXT_WriteTo(t *testing.T) {
 
 			ch := LTXT()
 			_, err := ch.ReadFrom(src)
-			require.NoError(t, err, tc.testN)
+			assert.NoError(t, err)
 
 			// --- When ---
 			dst := &bytes.Buffer{}
 			n, err := ch.WriteTo(dst)
 
 			// --- Then ---
-			assert.NoError(t, err, tc.testN)
-			assert.Exactly(t, tc.n, n, tc.testN)
+			assert.NoError(t, err)
+			assert.Equal(t, tc.n, n)
 
-			exp := kit.ReadAll(t, tc.ch(t))
-			assert.Exactly(t, exp, dst.Bytes(), tc.testN)
+			exp := must.Value(io.ReadAll(tc.ch(t)))
+			assert.Equal(t, exp, dst.Bytes())
 		})
 	}
 }
@@ -171,14 +171,18 @@ func Test_ChunkLTXT_WriteTo_Errors(t *testing.T) {
 
 		ch := LTXT()
 		_, err := ch.ReadFrom(src)
-		assert.NoError(t, err, "i=%d", i)
+		if !assert.NoError(t, err) {
+			t.Logf("errro i=%d", i)
+		}
 
 		// --- When ---
 		dst := &bytes.Buffer{}
 		_, err = ch.WriteTo(kit.ErrWriter(dst, i, nil))
 
 		// --- Then ---
-		assert.Error(t, err, "i=%d", i)
+		if !assert.Error(t, err) {
+			t.Logf("errro i=%d", i)
+		}
 	}
 }
 
@@ -199,14 +203,14 @@ func Test_ChunkLTXT_Reset(t *testing.T) {
 	ch.Reset()
 
 	// --- Then ---
-	assert.Exactly(t, IDltxt, ch.ID())
-	assert.Exactly(t, uint32(0), ch.Size())
-	assert.Exactly(t, uint32(0), ch.CuePointID)
-	assert.Exactly(t, uint32(0), ch.SamLen)
-	assert.Exactly(t, uint32(0), ch.PurID)
-	assert.Exactly(t, uint16(0), ch.Country)
-	assert.Exactly(t, uint16(0), ch.Language)
-	assert.Exactly(t, uint16(0), ch.Dialect)
-	assert.Exactly(t, uint16(0), ch.CodePage)
-	assert.Exactly(t, []byte{}, ch.text)
+	assert.Equal(t, IDltxt, ch.ID())
+	assert.Equal(t, uint32(0), ch.Size())
+	assert.Equal(t, uint32(0), ch.CuePointID)
+	assert.Equal(t, uint32(0), ch.SamLen)
+	assert.Equal(t, uint32(0), ch.PurID)
+	assert.Equal(t, uint16(0), ch.Country)
+	assert.Equal(t, uint16(0), ch.Language)
+	assert.Equal(t, uint16(0), ch.Dialect)
+	assert.Equal(t, uint16(0), ch.CodePage)
+	assert.Equal(t, []byte{}, ch.text)
 }

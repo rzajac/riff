@@ -5,9 +5,9 @@ import (
 	"io"
 	"testing"
 
+	"github.com/ctx42/testing/pkg/assert"
+	"github.com/ctx42/testing/pkg/must"
 	kit "github.com/rzajac/testkit"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 
 	"github.com/rzajac/riff/internal/test"
 )
@@ -52,9 +52,9 @@ func Test_ChunkINFO_INFO(t *testing.T) {
 	ch := INFO(LabIART)
 
 	// --- Then ---
-	assert.Exactly(t, LabIART, ch.ID())
-	assert.Exactly(t, uint32(0), ch.Size())
-	assert.Exactly(t, uint32(0), ch.Type())
+	assert.Equal(t, LabIART, ch.ID())
+	assert.Equal(t, uint32(0), ch.Size())
+	assert.Equal(t, uint32(0), ch.Type())
 	assert.True(t, ch.Multi())
 	assert.Nil(t, ch.Chunks())
 	assert.False(t, ch.Raw())
@@ -72,11 +72,11 @@ func Test_ChunkINFO_ReadFrom_TextLenEven(t *testing.T) {
 	// --- Then ---
 	assert.NoError(t, err)
 
-	assert.Exactly(t, int64(8), n)
-	assert.Exactly(t, LabIART, ch.ID())
-	assert.Exactly(t, uint32(4), ch.Size())
-	assert.Exactly(t, []byte{'a', 'b', 'c', 0}, ch.text)
-	assert.Exactly(t, []byte{'a', 'b', 'c'}, kit.ReadAll(t, ch.Text()))
+	assert.Equal(t, int64(8), n)
+	assert.Equal(t, LabIART, ch.ID())
+	assert.Equal(t, uint32(4), ch.Size())
+	assert.Equal(t, []byte{'a', 'b', 'c', 0}, ch.text)
+	assert.Equal(t, []byte{'a', 'b', 'c'}, must.Value(io.ReadAll(ch.Text())))
 	assert.True(t, test.IsAllRead(src))
 }
 
@@ -92,11 +92,11 @@ func Test_ChunkINFO_ReadFrom_TextLenOdd(t *testing.T) {
 	// --- Then ---
 	assert.NoError(t, err)
 
-	assert.Exactly(t, int64(8), n)
-	assert.Exactly(t, LabIART, ch.ID())
-	assert.Exactly(t, uint32(3), ch.Size())
-	assert.Exactly(t, []byte{'a', 'b', 0}, ch.text)
-	assert.Exactly(t, []byte{'a', 'b'}, kit.ReadAll(t, ch.Text()))
+	assert.Equal(t, int64(8), n)
+	assert.Equal(t, LabIART, ch.ID())
+	assert.Equal(t, uint32(3), ch.Size())
+	assert.Equal(t, []byte{'a', 'b', 0}, ch.text)
+	assert.Equal(t, []byte{'a', 'b'}, must.Value(io.ReadAll(ch.Text())))
 	assert.True(t, test.IsAllRead(src))
 }
 
@@ -111,7 +111,9 @@ func Test_ChunkINFO_ReadFrom_Errors(t *testing.T) {
 		_, err := INFO(LabIART).ReadFrom(io.LimitReader(src, int64(i)))
 
 		// --- Then ---
-		assert.Error(t, err, "i=%d", i)
+		if !assert.Error(t, err) {
+			t.Logf("errro i=%d", i)
+		}
 	}
 }
 
@@ -135,18 +137,18 @@ func Test_ChunkINFO_WriteTo(t *testing.T) {
 
 			ch := INFO(tc.id)
 			_, err := ch.ReadFrom(src)
-			require.NoError(t, err, tc.testN)
+			assert.NoError(t, err)
 
 			// --- When ---
 			dst := &bytes.Buffer{}
 			n, err := ch.WriteTo(dst)
 
 			// --- Then ---
-			assert.NoError(t, err, tc.testN)
-			assert.Exactly(t, tc.n, n, tc.testN)
+			assert.NoError(t, err)
+			assert.Equal(t, tc.n, n)
 
-			exp := kit.ReadAll(t, tc.ch(t))
-			assert.Exactly(t, exp, dst.Bytes(), tc.testN)
+			exp := must.Value(io.ReadAll(tc.ch(t)))
+			assert.Equal(t, exp, dst.Bytes())
 		})
 	}
 }
@@ -160,14 +162,18 @@ func Test_ChunkINFO_WriteTo_Errors(t *testing.T) {
 
 		ch := INFO(LabIART)
 		_, err := ch.ReadFrom(src)
-		assert.NoError(t, err, "i=%d", i)
+		if !assert.NoError(t, err) {
+			t.Logf("errro i=%d", i)
+		}
 
 		// --- When ---
 		dst := &bytes.Buffer{}
 		_, err = ch.WriteTo(kit.ErrWriter(dst, i, nil))
 
 		// --- Then ---
-		assert.Error(t, err, "i=%d", i)
+		if !assert.Error(t, err) {
+			t.Logf("errro i=%d", i)
+		}
 	}
 }
 
@@ -181,10 +187,10 @@ func Test_ChunkINFO_Reset(t *testing.T) {
 	ch.Reset()
 
 	// --- Then ---
-	assert.Exactly(t, uint32(LabIART), ch.ID())
-	assert.Exactly(t, uint32(0), ch.Size())
-	assert.Exactly(t, []byte{}, ch.text)
-	assert.Exactly(t, []byte{}, kit.ReadAll(t, ch.Text()))
+	assert.Equal(t, uint32(LabIART), ch.ID())
+	assert.Equal(t, uint32(0), ch.Size())
+	assert.Equal(t, []byte{}, ch.text)
+	assert.Equal(t, []byte{}, must.Value(io.ReadAll(ch.Text())))
 }
 
 func Test_ChunkINFO_InfoLabel(t *testing.T) {
@@ -214,11 +220,10 @@ func Test_ChunkINFO_InfoLabel(t *testing.T) {
 	}
 
 	for _, tc := range tt {
-		tc := tc
 		t.Run(tc.str, func(t *testing.T) {
 			t.Parallel()
 			got := InfoLabel(tc.label)
-			assert.Exactly(t, tc.str, got, "test %s", tc.str)
+			assert.Equal(t, tc.str, got)
 		})
 	}
 }

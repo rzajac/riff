@@ -6,9 +6,9 @@ import (
 	"io"
 	"testing"
 
+	"github.com/ctx42/testing/pkg/assert"
 	"github.com/rzajac/flexbuf"
 	kit "github.com/rzajac/testkit"
-	"github.com/stretchr/testify/assert"
 
 	"github.com/rzajac/riff/internal/test"
 )
@@ -18,11 +18,11 @@ func Test_ChunkRAWC_RAWC(t *testing.T) {
 	ch := RAWC(IDUNKN, LoadData)
 
 	// --- Then ---
-	assert.Exactly(t, uint32(IDUNKN), ch.ID())
-	assert.Exactly(t, uint32(0), ch.Size())
-	assert.Exactly(t, uint32(0), ch.Type())
+	assert.Equal(t, uint32(IDUNKN), ch.ID())
+	assert.Equal(t, uint32(0), ch.Size())
+	assert.Equal(t, uint32(0), ch.Type())
 	assert.True(t, ch.Multi())
-	assert.Len(t, ch.Chunks(), 0)
+	assert.Len(t, 0, ch.Chunks())
 	assert.True(t, ch.Raw())
 }
 
@@ -39,10 +39,10 @@ func Test_ChunkRAWC_ReadFrom(t *testing.T) {
 
 	// --- Then ---
 	assert.NoError(t, err)
-	assert.Exactly(t, int64(8), n)
-	assert.Exactly(t, uint32(3), ch.Size())
-	assert.Exactly(t, uint32(0), ch.Type())
-	assert.Exactly(t, []byte{'A', 'B', 'C'}, ch.data)
+	assert.Equal(t, int64(8), n)
+	assert.Equal(t, uint32(3), ch.Size())
+	assert.Equal(t, uint32(0), ch.Type())
+	assert.Equal(t, []byte{'A', 'B', 'C'}, ch.data)
 	assert.True(t, test.IsAllRead(src))
 }
 
@@ -56,9 +56,9 @@ func Test_ChunkRAWC_ReadFrom_ErrUnexpectedEOF(t *testing.T) {
 	n, err := ch.ReadFrom(src)
 
 	// --- Then ---
-	assert.True(t, errors.Is(err, io.ErrUnexpectedEOF))
-	kit.AssertErrPrefix(t, err, "error decoding RAWC:ABCD chunk: ")
-	assert.Exactly(t, int64(0), n)
+	assert.ErrorIs(t, io.ErrUnexpectedEOF, err)
+	assert.ErrorContain(t, "error decoding RAWC:ABCD chunk: ", err)
+	assert.Equal(t, int64(0), n)
 }
 
 func Test_ChunkRAWC_ReadFrom_ErrorReadingData(t *testing.T) {
@@ -73,9 +73,9 @@ func Test_ChunkRAWC_ReadFrom_ErrorReadingData(t *testing.T) {
 	n, err := ch.ReadFrom(src)
 
 	// --- Then ---
-	assert.True(t, errors.Is(err, io.ErrUnexpectedEOF))
-	kit.AssertErrPrefix(t, err, "error decoding RAWC:ABCD chunk: ")
-	assert.Exactly(t, int64(8), n)
+	assert.ErrorIs(t, io.ErrUnexpectedEOF, err)
+	assert.ErrorContain(t, "error decoding RAWC:ABCD chunk: ", err)
+	assert.Equal(t, int64(8), n)
 }
 
 func Test_ChunkRAWC_ReadFrom_ErrorReadingPadding(t *testing.T) {
@@ -89,9 +89,9 @@ func Test_ChunkRAWC_ReadFrom_ErrorReadingPadding(t *testing.T) {
 	n, err := ch.ReadFrom(src)
 
 	// --- Then ---
-	assert.True(t, errors.Is(err, io.ErrUnexpectedEOF))
-	kit.AssertErrPrefix(t, err, "error decoding RAWC:ABCD chunk: ")
-	assert.Exactly(t, int64(7), n)
+	assert.ErrorIs(t, io.ErrUnexpectedEOF, err)
+	assert.ErrorContain(t, "error decoding RAWC:ABCD chunk: ", err)
+	assert.Equal(t, int64(7), n)
 }
 
 func Test_ChunkRAWC_ReadFrom_SkipData_SeekAvailable(t *testing.T) {
@@ -107,8 +107,8 @@ func Test_ChunkRAWC_ReadFrom_SkipData_SeekAvailable(t *testing.T) {
 
 	// --- Then ---
 	assert.NoError(t, err)
-	assert.Exactly(t, int64(8), n)
-	assert.Exactly(t, uint32(3), ch.Size())
+	assert.Equal(t, int64(8), n)
+	assert.Equal(t, uint32(3), ch.Size())
 	assert.Nil(t, ch.data)
 	assert.True(t, test.IsAllRead(src))
 }
@@ -130,8 +130,8 @@ func Test_ChunkRAWC_ReadFrom_SkipData_SeekNotAvailable(t *testing.T) {
 
 	// --- Then ---
 	assert.NoError(t, err)
-	assert.Exactly(t, int64(8), n)
-	assert.Exactly(t, uint32(3), ch.Size())
+	assert.Equal(t, int64(8), n)
+	assert.Equal(t, uint32(3), ch.Size())
 	assert.Nil(t, ch.data)
 }
 
@@ -147,14 +147,14 @@ func Test_ChunkRAWC_Write_WithoutPadding(t *testing.T) {
 
 	// --- Then ---
 	assert.NoError(t, err)
-	assert.Exactly(t, int64(10), n)
+	assert.Equal(t, int64(10), n)
 
 	exp := []byte{
 		0x41, 0x42, 0x43, 0x44, // ID.
 		0x2, 0x0, 0x0, 0x0, // Size.
 		0x0, 0x1, // Data.
 	}
-	assert.Exactly(t, exp, dst.Bytes())
+	assert.Equal(t, exp, dst.Bytes())
 }
 
 func Test_ChunkRAWC_Write_WithPadding(t *testing.T) {
@@ -169,7 +169,7 @@ func Test_ChunkRAWC_Write_WithPadding(t *testing.T) {
 
 	// --- Then ---
 	assert.NoError(t, err)
-	assert.Exactly(t, int64(12), n)
+	assert.Equal(t, int64(12), n)
 
 	exp := []byte{
 		0x41, 0x42, 0x43, 0x44, // ID.
@@ -177,7 +177,7 @@ func Test_ChunkRAWC_Write_WithPadding(t *testing.T) {
 		0x0, 0x1, 0x2, // Data.
 		0x0, // Padding.
 	}
-	assert.Exactly(t, exp, dst.Bytes())
+	assert.Equal(t, exp, dst.Bytes())
 }
 
 func Test_ChunkRAWC_Write_ErrorWritingID(t *testing.T) {
@@ -193,12 +193,12 @@ func Test_ChunkRAWC_Write_ErrorWritingID(t *testing.T) {
 	n, err := ch.WriteTo(dst)
 
 	// --- Then ---
-	assert.True(t, errors.Is(err, kit.ErrTestError))
-	kit.AssertErrPrefix(t, err, "error encoding RAWC:ABCD chunk: ")
-	assert.Exactly(t, int64(0), n)
+	assert.ErrorIs(t, kit.ErrTestError, err)
+	assert.ErrorContain(t, "error encoding RAWC:ABCD chunk: ", err)
+	assert.Equal(t, int64(0), n)
 
 	exp := []byte{0x41, 0x42, 0x43}
-	assert.Exactly(t, exp, buf.Bytes())
+	assert.Equal(t, exp, buf.Bytes())
 }
 
 func Test_ChunkRAWC_Write_ErrorWritingData(t *testing.T) {
@@ -214,16 +214,16 @@ func Test_ChunkRAWC_Write_ErrorWritingData(t *testing.T) {
 	n, err := ch.WriteTo(dst)
 
 	// --- Then ---
-	assert.True(t, errors.Is(err, kit.ErrTestError))
-	kit.AssertErrPrefix(t, err, "error encoding RAWC:ABCD chunk: ")
-	assert.Exactly(t, int64(10), n)
+	assert.ErrorIs(t, kit.ErrTestError, err)
+	assert.ErrorContain(t, "error encoding RAWC:ABCD chunk: ", err)
+	assert.Equal(t, int64(10), n)
 
 	exp := []byte{
 		0x41, 0x42, 0x43, 0x44, // ID.
 		0x3, 0x0, 0x0, 0x0, // Size.
 		0x0, 0x1, // Data.
 	}
-	assert.Exactly(t, exp, buf.Bytes())
+	assert.Equal(t, exp, buf.Bytes())
 }
 
 func Test_ChunkRAWC_Write_ErrorWritingPadding(t *testing.T) {
@@ -239,9 +239,9 @@ func Test_ChunkRAWC_Write_ErrorWritingPadding(t *testing.T) {
 	n, err := ch.WriteTo(dst)
 
 	// --- Then ---
-	assert.True(t, errors.Is(err, kit.ErrTestError))
-	kit.AssertErrPrefix(t, err, "error encoding RAWC:ABCD chunk: ")
-	assert.Exactly(t, int64(12), n)
+	assert.ErrorIs(t, kit.ErrTestError, err)
+	assert.ErrorContain(t, "error encoding RAWC:ABCD chunk: ", err)
+	assert.Equal(t, int64(12), n)
 
 	exp := []byte{
 		0x41, 0x42, 0x43, 0x44, // ID.
@@ -249,7 +249,7 @@ func Test_ChunkRAWC_Write_ErrorWritingPadding(t *testing.T) {
 		0x0, 0x1, 0x2, // Data.
 		0x0, // Padding
 	}
-	assert.Exactly(t, exp, buf.Bytes())
+	assert.Equal(t, exp, buf.Bytes())
 }
 
 func Test_ChunkRAWC_Write_SkipData(t *testing.T) {
@@ -264,7 +264,7 @@ func Test_ChunkRAWC_Write_SkipData(t *testing.T) {
 
 	// --- Then ---
 	assert.True(t, errors.Is(err, ErrSkipDataMode))
-	assert.Exactly(t, int64(0), n)
+	assert.Equal(t, int64(0), n)
 }
 
 func Test_ChunkRAWC_Reset(t *testing.T) {
@@ -277,7 +277,7 @@ func Test_ChunkRAWC_Reset(t *testing.T) {
 	ch.Reset()
 
 	// --- Then ---
-	assert.Exactly(t, uint32(IDUNKN), ch.ID())
-	assert.Exactly(t, uint32(0), ch.Size())
-	assert.Len(t, ch.data, 0)
+	assert.Equal(t, uint32(IDUNKN), ch.ID())
+	assert.Equal(t, uint32(0), ch.Size())
+	assert.Len(t, 0, ch.data)
 }
