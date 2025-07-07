@@ -142,7 +142,7 @@ func (ch *ChunkLIST) WriteTo(w io.Writer) (int64, error) {
 		return sum, fmt.Errorf(errFmtEncode, Uint32(IDLIST), err)
 	}
 
-	if err := binary.Write(w, be, ch.ListType); err != nil {
+	if err = binary.Write(w, be, ch.ListType); err != nil {
 		return sum, fmt.Errorf(errFmtEncode, Uint32(IDLIST), err)
 	}
 	sum += 4

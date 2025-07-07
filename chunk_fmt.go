@@ -198,14 +198,14 @@ func (ch *ChunkFMT) WriteTo(w io.Writer) (int64, error) {
 		return sum, fmt.Errorf(errFmtEncode, Uint32(IDfmt), err)
 	}
 
-	if err := binary.Write(w, le, ch.fmtStatic); err != nil {
+	if err = binary.Write(w, le, ch.fmtStatic); err != nil {
 		return sum, fmt.Errorf(errFmtEncode, Uint32(IDfmt), err)
 	}
 	sum += 16
 
 	if eln > 0 || ch.WriteZeroExtra {
 		// Write size of extra bytes.
-		if err := binary.Write(w, le, uint16(eln)); err != nil {
+		if err = binary.Write(w, le, uint16(eln)); err != nil {
 			return sum, fmt.Errorf(errFmtEncode, Uint32(IDfmt), err)
 		}
 		sum += 2

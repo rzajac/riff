@@ -136,7 +136,7 @@ func (rif *RIFF) ReadFrom(r io.Reader) (int64, error) {
 	}
 	sum += 4
 
-	if err := binary.Read(r, be, &rif.riffType); err != nil {
+	if err = binary.Read(r, be, &rif.riffType); err != nil {
 		return sum, fmt.Errorf(errFmtDecode, Uint32(IDRIFF), err)
 	}
 	sum += 4
@@ -179,7 +179,7 @@ func (rif *RIFF) WriteTo(w io.Writer) (int64, error) {
 		return sum, fmt.Errorf(errFmtEncode, Uint32(IDRIFF), err)
 	}
 
-	if err := binary.Write(w, be, rif.riffType); err != nil {
+	if err = binary.Write(w, be, rif.riffType); err != nil {
 		return sum, fmt.Errorf(errFmtEncode, Uint32(IDRIFF), err)
 	}
 	sum += 4

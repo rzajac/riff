@@ -194,13 +194,13 @@ func (ch *ChunkSMPL) WriteTo(w io.Writer) (int64, error) {
 		return sum, fmt.Errorf(errFmtEncode, Uint32(IDsmpl), err)
 	}
 
-	if err := binary.Write(w, le, ch.smplStatic); err != nil {
+	if err = binary.Write(w, le, ch.smplStatic); err != nil {
 		return sum, fmt.Errorf(errFmtEncode, Uint32(IDsmpl), err)
 	}
 	sum += 36
 
 	for i := 0; i < len(ch.SampleLoops); i++ {
-		if err := binary.Write(w, le, ch.SampleLoops[i]); err != nil {
+		if err = binary.Write(w, le, ch.SampleLoops[i]); err != nil {
 			return sum, fmt.Errorf(errFmtEncode, Uint32(IDsmpl), err)
 		}
 		sum += 24
@@ -208,7 +208,7 @@ func (ch *ChunkSMPL) WriteTo(w io.Writer) (int64, error) {
 
 	lsd := len(ch.sampleData)
 	if lsd > 0 {
-		if err := binary.Write(w, le, ch.sampleData); err != nil {
+		if err = binary.Write(w, le, ch.sampleData); err != nil {
 			return sum, fmt.Errorf(errFmtEncode, Uint32(IDsmpl), err)
 		}
 		sum += int64(lsd)

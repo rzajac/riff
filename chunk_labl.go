@@ -88,7 +88,7 @@ func (ch *ChunkLABL) WriteTo(w io.Writer) (int64, error) {
 		return sum, fmt.Errorf(errFmtEncode, linkids(IDINFO, IDlabl), err)
 	}
 
-	if err := binary.Write(w, le, ch.CuePointID); err != nil {
+	if err = binary.Write(w, le, ch.CuePointID); err != nil {
 		return sum, fmt.Errorf(errFmtEncode, linkids(IDINFO, IDlabl), err)
 	}
 	sum += 4
