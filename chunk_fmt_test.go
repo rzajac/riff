@@ -7,8 +7,8 @@ import (
 	"time"
 
 	"github.com/ctx42/testing/pkg/assert"
+	"github.com/ctx42/testing/pkg/kit/iokit"
 	"github.com/ctx42/testing/pkg/must"
-	kit "github.com/rzajac/testkit"
 
 	"github.com/rzajac/riff/internal/test"
 )
@@ -227,14 +227,14 @@ func Test_ChunkFMT_ReadFrom_LimitReaderError(t *testing.T) {
 	// --- Given ---
 	src := fmtChunkWithExtraBytesOdd(t)
 	test.Skip4B(t, src) // Skip chunk ID.
-	src = kit.ErrReader(src, 24, nil)
+	src = iokit.ErrReader(src, 24)
 
 	// --- When ---
 	ch := FMT()
 	n, err := ch.ReadFrom(src)
 
 	// --- Then ---
-	assert.ErrorIs(t, kit.ErrTestError, err)
+	assert.ErrorIs(t, iokit.ErrRead, err)
 	assert.Equal(t, int64(24), n)
 }
 
@@ -315,7 +315,7 @@ func Test_ChunkFMT_WriteTo_Errors(t *testing.T) {
 
 		// --- When ---
 		dst := &bytes.Buffer{}
-		_, err = ch.WriteTo(kit.ErrWriter(dst, i, nil))
+		_, err = ch.WriteTo(iokit.ErrWriter(dst, i))
 
 		// --- Then ---
 		if !assert.Error(t, err) {

@@ -7,8 +7,8 @@ import (
 	"testing"
 
 	"github.com/ctx42/testing/pkg/assert"
-	"github.com/rzajac/flexbuf"
-	kit "github.com/rzajac/testkit"
+	"github.com/ctx42/testing/pkg/kit/iokit"
+	"github.com/ctx42/testing/pkg/kit/memfs"
 
 	"github.com/rzajac/riff/internal/test"
 )
@@ -115,7 +115,7 @@ func Test_ChunkRAWC_ReadFrom_SkipData_SeekAvailable(t *testing.T) {
 
 func Test_ChunkRAWC_ReadFrom_SkipData_SeekNotAvailable(t *testing.T) {
 	// --- Given ---
-	tmp := &flexbuf.Buffer{}
+	tmp := &memfs.File{}
 	test.WriteUint32LE(t, tmp, 3)                  // Chunk size (4).
 	test.WriteBytes(t, tmp, []byte{'A', 'B', 'C'}) // Chunk data (*).
 	test.WriteByte(t, tmp, 0)                      // Padding byte (1).
@@ -187,13 +187,13 @@ func Test_ChunkRAWC_Write_ErrorWritingID(t *testing.T) {
 	ch.data = []byte{0, 1, 2}
 
 	buf := &bytes.Buffer{}
-	dst := kit.ErrWriter(buf, 3, nil)
+	dst := iokit.ErrWriter(buf, 3)
 
 	// --- When ---
 	n, err := ch.WriteTo(dst)
 
 	// --- Then ---
-	assert.ErrorIs(t, kit.ErrTestError, err)
+	assert.ErrorIs(t, iokit.ErrWrite, err)
 	assert.ErrorContain(t, "error encoding RAWC:ABCD chunk: ", err)
 	assert.Equal(t, int64(0), n)
 
@@ -208,13 +208,13 @@ func Test_ChunkRAWC_Write_ErrorWritingData(t *testing.T) {
 	ch.data = []byte{0, 1, 2}
 
 	buf := &bytes.Buffer{}
-	dst := kit.ErrWriter(buf, 10, nil)
+	dst := iokit.ErrWriter(buf, 10)
 
 	// --- When ---
 	n, err := ch.WriteTo(dst)
 
 	// --- Then ---
-	assert.ErrorIs(t, kit.ErrTestError, err)
+	assert.ErrorIs(t, iokit.ErrWrite, err)
 	assert.ErrorContain(t, "error encoding RAWC:ABCD chunk: ", err)
 	assert.Equal(t, int64(10), n)
 
@@ -233,13 +233,13 @@ func Test_ChunkRAWC_Write_ErrorWritingPadding(t *testing.T) {
 	ch.data = []byte{0, 1, 2}
 
 	buf := &bytes.Buffer{}
-	dst := kit.ErrWriter(buf, 12, nil)
+	dst := iokit.ErrWriter(buf, 12)
 
 	// --- When ---
 	n, err := ch.WriteTo(dst)
 
 	// --- Then ---
-	assert.ErrorIs(t, kit.ErrTestError, err)
+	assert.ErrorIs(t, iokit.ErrWrite, err)
 	assert.ErrorContain(t, "error encoding RAWC:ABCD chunk: ", err)
 	assert.Equal(t, int64(12), n)
 

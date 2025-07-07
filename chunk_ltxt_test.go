@@ -6,8 +6,8 @@ import (
 	"testing"
 
 	"github.com/ctx42/testing/pkg/assert"
+	"github.com/ctx42/testing/pkg/kit/iokit"
 	"github.com/ctx42/testing/pkg/must"
-	kit "github.com/rzajac/testkit"
 
 	"github.com/rzajac/riff/internal/test"
 )
@@ -108,7 +108,7 @@ func Test_ChunkLTXT_ReadFrom_TextLenOdd(t *testing.T) {
 	assert.Equal(t, uint16(6), ch.Dialect)
 	assert.Equal(t, uint16(7), ch.CodePage)
 	assert.Equal(t, []byte{'a', 'b', 0}, ch.text)
-	assert.Equal(t, []byte{'a', 'b'}, kit.ReadAll(t, ch.Text()))
+	assert.Equal(t, []byte{'a', 'b'}, must.Value(io.ReadAll(ch.Text())))
 	assert.True(t, test.IsAllRead(src))
 }
 
@@ -177,7 +177,7 @@ func Test_ChunkLTXT_WriteTo_Errors(t *testing.T) {
 
 		// --- When ---
 		dst := &bytes.Buffer{}
-		_, err = ch.WriteTo(kit.ErrWriter(dst, i, nil))
+		_, err = ch.WriteTo(iokit.ErrWriter(dst, i))
 
 		// --- Then ---
 		if !assert.Error(t, err) {

@@ -6,9 +6,10 @@ import (
 	"testing"
 
 	"github.com/ctx42/testing/pkg/assert"
+	"github.com/ctx42/testing/pkg/kit/iokit"
+	"github.com/ctx42/testing/pkg/kit/memfs"
+	"github.com/ctx42/testing/pkg/mock"
 	"github.com/ctx42/testing/pkg/must"
-	"github.com/rzajac/flexbuf"
-	kit "github.com/rzajac/testkit"
 )
 
 func Test_StrToID(t *testing.T) {
@@ -79,15 +80,15 @@ func Test_ReadChunkID(t *testing.T) {
 
 func Test_ReadChunkID_Error(t *testing.T) {
 	// --- Given ---
-	buf := []byte{0x41, 0x42, 0x43, 0x44}
-	src := kit.ErrReader(bytes.NewReader(buf), 3, nil)
+	src := iokit.NewReaderMock(t)
+	src.OnRead(mock.Any).Return(0, iokit.ErrRead)
 
 	// --- When ---
 	var id uint32
 	err := ReadChunkID(src, &id)
 
 	// --- Then ---
-	assert.ErrorIs(t, err, kit.ErrTestError)
+	assert.ErrorIs(t, err, iokit.ErrRead)
 	assert.Equal(t, uint32(0), id)
 }
 
@@ -105,34 +106,34 @@ func Test_ReadChunkSize(t *testing.T) {
 
 func Test_ReadChunkSize_Error(t *testing.T) {
 	// --- Given ---
-	buf := []byte{0x10, 0x00, 0x00}
-	src := kit.ErrReader(bytes.NewReader(buf), 3, nil)
+	src := iokit.NewReaderMock(t)
+	src.OnRead(mock.Any).Return(0, iokit.ErrRead)
 
 	// --- When ---
 	size, err := ReadChunkSize(src)
 
 	// --- Then ---
-	assert.ErrorIs(t, err, kit.ErrTestError)
+	assert.ErrorIs(t, err, iokit.ErrRead)
 	assert.Equal(t, uint32(0), size)
 }
 
 func Test_LimitedRead(t *testing.T) {
 	// --- Given ---
 	src := bytes.NewReader([]byte{0, 1, 2, 3})
-	dst := &flexbuf.Buffer{}
+	dst := &memfs.File{}
 
 	// --- When ---
 	err := LimitedRead(src, 3, dst)
 
 	// --- Then ---
 	assert.NoError(t, err)
-	assert.Equal(t, []byte{0, 1, 2}, kit.ReadAllFromStart(t, dst))
+	assert.Equal(t, []byte{0, 1, 2}, iokit.ReadAllFromStart(dst))
 }
 
 func Test_LimitedRead_ErrUnexpectedEOF(t *testing.T) {
 	// --- Given ---
 	src := bytes.NewReader([]byte{0, 1, 2, 3})
-	dst := &flexbuf.Buffer{}
+	dst := &memfs.File{}
 
 	// --- When ---
 	err := LimitedRead(src, 30, dst)
@@ -143,14 +144,15 @@ func Test_LimitedRead_ErrUnexpectedEOF(t *testing.T) {
 
 func Test_LimitedRead_Error(t *testing.T) {
 	// --- Given ---
-	src := kit.ErrReader(bytes.NewReader([]byte{0, 1, 2}), 2, nil)
-	dst := &flexbuf.Buffer{}
+	src := iokit.NewReaderMock(t)
+	src.OnRead(mock.Any).Return(0, iokit.ErrRead)
+	dst := &memfs.File{}
 
 	// --- When ---
 	err := LimitedRead(src, 3, dst)
 
 	// --- Then ---
-	assert.ErrorIs(t, err, kit.ErrTestError)
+	assert.ErrorIs(t, err, iokit.ErrRead)
 }
 
 func Test_SkipN_BlackHole(t *testing.T) {
@@ -171,29 +173,19 @@ func Test_SkipN_BlackHole(t *testing.T) {
 
 func Test_SkipN_BlackHole_Error(t *testing.T) {
 	// --- Given ---
-	buf := &bytes.Buffer{}
-	for i := 0; i < 30; i++ {
-		buf.WriteByte(byte(i))
-	}
-	r := kit.ErrReader(buf, 10, nil)
+	src := iokit.NewReaderMock(t)
+	src.OnRead(mock.Any).Return(0, iokit.ErrRead)
 
 	// --- When ---
-	err := SkipN(r, 20)
+	err := SkipN(src, 20)
 
 	// --- Then ---
-	assert.ErrorIs(t, err, kit.ErrTestError)
-	exp := []byte{
-		0x0a, 0x0b, 0x0c, 0x0d, 0x0e,
-		0x0f, 0x10, 0x11, 0x12, 0x13,
-		0x14, 0x15, 0x16, 0x17, 0x18,
-		0x19, 0x1a, 0x1b, 0x1c, 0x1d,
-	}
-	assert.Equal(t, exp, must.Value(io.ReadAll(buf)))
+	assert.ErrorIs(t, iokit.ErrRead, err)
 }
 
 func Test_SkipN_Seek(t *testing.T) {
 	// --- Given ---
-	buf := &flexbuf.Buffer{}
+	buf := &memfs.File{}
 	for i := 0; i < 30; i++ {
 		_ = buf.WriteByte(byte(i))
 	}
@@ -279,13 +271,13 @@ func Test_WriteIDAndSize(t *testing.T) {
 func Test_WriteIDAndSize_ErrorWritingID(t *testing.T) {
 	// --- Given ---
 	buf := &bytes.Buffer{}
-	dst := kit.ErrWriter(buf, 3, nil)
+	dst := iokit.ErrWriter(buf, 3)
 
 	// --- When ---
 	n, err := WriteIDAndSize(dst, IDRIFF, 124)
 
 	// --- Then ---
-	assert.ErrorIs(t, err, kit.ErrTestError)
+	assert.ErrorIs(t, err, iokit.ErrWrite)
 	assert.Equal(t, int64(0), n)
 
 	exp := []byte{0x52, 0x49, 0x46}
@@ -295,13 +287,13 @@ func Test_WriteIDAndSize_ErrorWritingID(t *testing.T) {
 func Test_WriteIDAndSize_ErrorWritingSize(t *testing.T) {
 	// --- Given ---
 	buf := &bytes.Buffer{}
-	dst := kit.ErrWriter(buf, 5, nil)
+	dst := iokit.ErrWriter(buf, 5)
 
 	// --- When ---
 	n, err := WriteIDAndSize(dst, IDRIFF, 124)
 
 	// --- Then ---
-	assert.ErrorIs(t, err, kit.ErrTestError)
+	assert.ErrorIs(t, err, iokit.ErrWrite)
 	assert.Equal(t, int64(4), n)
 
 	exp := []byte{0x52, 0x49, 0x46, 0x46, 0x7c}
@@ -339,13 +331,13 @@ func Test_WritePaddingIf_EvenSize(t *testing.T) {
 func Test_WritePaddingIf_Error(t *testing.T) {
 	// --- Given ---
 	buf := &bytes.Buffer{}
-	dst := kit.ErrWriter(buf, 0, nil)
+	dst := iokit.ErrWriter(buf, 0)
 
 	// --- When ---
 	n, err := WritePaddingIf(dst, 123)
 
 	// --- Then ---
-	assert.ErrorIs(t, err, kit.ErrTestError)
+	assert.ErrorIs(t, err, iokit.ErrWrite)
 	assert.Equal(t, int64(0), n)
 	assert.Equal(t, []byte(nil), buf.Bytes())
 }

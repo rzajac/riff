@@ -6,8 +6,8 @@ import (
 	"testing"
 
 	"github.com/ctx42/testing/pkg/assert"
+	"github.com/ctx42/testing/pkg/kit/iokit"
 	"github.com/ctx42/testing/pkg/must"
-	kit "github.com/rzajac/testkit"
 
 	"github.com/rzajac/riff/internal/test"
 )
@@ -155,7 +155,7 @@ func Test_ChunkLABL_WriteTo_Errors(t *testing.T) {
 
 		// --- When ---
 		dst := &bytes.Buffer{}
-		_, err = ch.WriteTo(kit.ErrWriter(dst, i, nil))
+		_, err = ch.WriteTo(iokit.ErrWriter(dst, i))
 
 		// --- Then ---
 		if !assert.Error(t, err) {

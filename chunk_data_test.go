@@ -7,8 +7,8 @@ import (
 	"time"
 
 	"github.com/ctx42/testing/pkg/assert"
+	"github.com/ctx42/testing/pkg/kit/iokit"
 	"github.com/ctx42/testing/pkg/must"
-	kit "github.com/rzajac/testkit"
 
 	"github.com/rzajac/riff/internal/test"
 )
@@ -221,7 +221,7 @@ func TestChunkDATA_WriteTo(t *testing.T) {
 }
 
 func Test_ChunkDATA_WriteTo_Errors(t *testing.T) {
-	// Writing less then 24 bytes should always result in an error.
+	// Writing less than 24 bytes should always result in an error.
 	for i := 24; i > 0; i-- {
 		// --- Given ---
 		src := dataChunkOdd(t)
@@ -235,7 +235,7 @@ func Test_ChunkDATA_WriteTo_Errors(t *testing.T) {
 
 		// --- When ---
 		dst := &bytes.Buffer{}
-		_, err = ch.WriteTo(kit.ErrWriter(dst, i, nil))
+		_, err = ch.WriteTo(iokit.ErrWriter(dst, i))
 
 		// --- Then ---
 		if !assert.Error(t, err) {

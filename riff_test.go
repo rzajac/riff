@@ -6,9 +6,9 @@ import (
 	"testing"
 
 	"github.com/ctx42/testing/pkg/assert"
+	"github.com/ctx42/testing/pkg/kit"
+	"github.com/ctx42/testing/pkg/kit/memfs"
 	"github.com/ctx42/testing/pkg/must"
-	"github.com/rzajac/flexbuf"
-	kit "github.com/rzajac/testkit"
 )
 
 func Test_RIFF_New(t *testing.T) {
@@ -131,7 +131,7 @@ func Test_RIFF_CorrectingSize(t *testing.T) {
 
 	assert.Equal(t, int64(27074), n)
 	assert.Equal(t, uint32(27074), rif.Size()+8)
-	assert.Equal(t, "67cfc04cee2ad37e90e480a26fa45c0e", kit.MD5Reader(t, dst))
+	assert.Equal(t, "ebdf4fefcbbb804b44cddbc50521ba29f833e05c", kit.SHA1Reader(dst))
 }
 
 func Test_RIFF_WriteTo_SmokeTest(t *testing.T) {
@@ -142,35 +142,35 @@ func Test_RIFF_WriteTo_SmokeTest(t *testing.T) {
 		size int64
 		hash string
 	}{
-		{"testdata/11k16bitpcm.wav", 304578, "1fffa675b2467f77c691843e7d096595"},
-		{"testdata/11k8bitpcm.wav", 152312, "5bc47c5d45b3c50f6cd90939b9d4d80e"},
-		{"testdata/11kadpcm.wav", 77252, "6b90b2661f2c9171a8cbcf23b88ba404"},
-		{"testdata/11kgsm.wav", 31000, "e16651ac93f206192e12a75fa5a69d02"},
-		{"testdata/11kulaw.wav", 152326, "b7fd8d4ba39edc80112f565aacb2e3cb"},
-		{"testdata/32bit.wav", 352844, "14c4936b9e2f28de8489af4ced6d1f05"},
-		{"testdata/8bit.wav", 88244, "b23f0c1392ff580281ec3ff2cf66ef21"},
-		{"testdata/8k16bitpcm.wav", 221026, "2c313f0691f872d50d71399b78318fe0"},
-		{"testdata/8k8bitpcm.wav", 110532, "2616254a680948b9f5cd4cad6cd64af2"},
-		{"testdata/8kadpcm.wav", 56072, "e47bf1f4c3f987af80e3e8f576b8bd1b"},
-		{"testdata/8kcelp.wav", 8350, "be2acd3a5da4a1c56a4d2fd8a254665b"},
-		{"testdata/8kgsm.wav", 22550, "a9ada6656389e38b488e1eb77d7310b4"},
-		{"testdata/8kmp316.wav", 27386, "77766ae68f490737c6105c1630dc6c07"},
-		{"testdata/8kmp38.wav", 13584, "fc83a0bda8a45f78413eba43d9f07e78"},
-		{"testdata/8ksbc12.wav", 19658, "b4228c93ed192aec8531946f215c194d"},
-		{"testdata/8ktruespeech.wav", 14842, "c412c81374599b7a165d943067c55ebf"},
-		{"testdata/8kulaw.wav", 110546, "b0e107862bb4b8e0a0a3821f27c0bd93"},
-		{"testdata/bass.wav", 143786, "db23c035ed961fe32c63806b95cd3b5a"},
-		{"testdata/dirty-kick-24b441k.wav", 132136, "987fa9f0c9b328ee9a9fe2801274b5fd"},
-		{"testdata/flloop.wav", 434838, "6d553975207ed98e10dc313bd415db86"},
-		{"testdata/junkKick.wav", 83084, "076be6fd56e33a658dcc9fcedbab5a41"},
-		{"testdata/kick-16b441k.wav", 31692, "f49af03be043e796c699be1da22d6d7d"},
-		{"testdata/kick.wav", 9012, "2f69f2d444206336866ffe37699f614a"},
-		{"testdata/listChunkInHeader.wav", 104196, "80690b46dea414c349353d41e66b1a7c"},
-		{"testdata/listinfo.wav", 176720, "4d145a1b64a8e1d348bb3a5937cbf849"},
-		{"testdata/misaligned-chunk.wav", 3441572, "d5382f19e0fb746e30aaf4e9fa33ce53"},
-		{"testdata/padded24b.wav", 24908, "227863fe5043172b12171dbd93b03873"},
-		{"testdata/sample.avi", 230264, "bc5558ae9465ef6addb308317a99a6df"},
-		{"testdata/sample.rmi", 29640, "df2f2f43af049d401bc3ebc73bf79045"},
+		{"testdata/11k16bitpcm.wav", 304578, "f183c8045848f7fe821f1f26fdffaeb794baad6c"},
+		{"testdata/11k8bitpcm.wav", 152312, "51218ead7323766530094ea37211cdc190bade2b"},
+		{"testdata/11kadpcm.wav", 77252, "27f7d01150347f039d1997c4ef820a10bf9cbc0a"},
+		{"testdata/11kgsm.wav", 31000, "5d7f26bac9d3270c424446936360b0ea04f3ccd9"},
+		{"testdata/11kulaw.wav", 152326, "22699d04d0d30adf1a9137b79bb87354f5b72683"},
+		{"testdata/32bit.wav", 352844, "46bc96f0953df4f6f36053e65733f5e32d276167"},
+		{"testdata/8bit.wav", 88244, "ef28c1a4fc75b0e4630499b1899bef244c837424"},
+		{"testdata/8k16bitpcm.wav", 221026, "666c63ca5610b6d8cabbaf5f8b84427657f0ec50"},
+		{"testdata/8k8bitpcm.wav", 110532, "25046c120e524475fae9417c2cc938e1bbe95231"},
+		{"testdata/8kadpcm.wav", 56072, "9387acf987806693dd2f14feaaaa49ae2a79030a"},
+		{"testdata/8kcelp.wav", 8350, "f7645b8f9bed2f397f426daf02273a1731652f4c"},
+		{"testdata/8kgsm.wav", 22550, "35cd3a68a9ab8e706a2ca8ac75a8d9b7c70f4545"},
+		{"testdata/8kmp316.wav", 27386, "4652808d259bcf19d129bbfd2817e56466269808"},
+		{"testdata/8kmp38.wav", 13584, "71b7463d5e66e418c242a56a04ba15b3de329822"},
+		{"testdata/8ksbc12.wav", 19658, "6e7e5f4f2854f29e9ea87070a94a04b253020c49"},
+		{"testdata/8ktruespeech.wav", 14842, "b8d289588a9a195042fd3482b12cb3a659cae26b"},
+		{"testdata/8kulaw.wav", 110546, "f8f7ff5311da5a59a91f41ac679fbc23a8381a99"},
+		{"testdata/bass.wav", 143786, "5c547df0f3d24da873d92e28ca3ecd22b83ad92b"},
+		{"testdata/dirty-kick-24b441k.wav", 132136, "61b6cebfe073f34a81bc4352e69b5a044b07e188"},
+		{"testdata/flloop.wav", 434838, "d12b046588af5475d846dd4a72f957cf03a33591"},
+		{"testdata/junkKick.wav", 83084, "5974547313bcb8804618a3048f6902a429d62a4e"},
+		{"testdata/kick-16b441k.wav", 31692, "1d7dbd0fe12ce2f8ec33ef5f90e271125a83ea94"},
+		{"testdata/kick.wav", 9012, "cfa0812a881c3d3f2a2783b5b7a6d2ba62f7a1aa"},
+		{"testdata/listChunkInHeader.wav", 104196, "9d722b63acf00c0031a5aaf7b3f73291321aafe3"},
+		{"testdata/listinfo.wav", 176720, "8dd085ecf49c1ca781857dd1f26b16b636b7ab07"},
+		{"testdata/misaligned-chunk.wav", 3441572, "dda435791002e772da033e3e7f09a3854c9e8d76"},
+		{"testdata/padded24b.wav", 24908, "25b88e9afdc533be201b4393bc489cbfa61ec2e7"},
+		{"testdata/sample.avi", 230264, "8f30db3104fafec017241b63fbba6588ee8cd5b4"},
+		{"testdata/sample.rmi", 29640, "aa4cdab911e956439f8553772b56cd01993e9e12"},
 	}
 
 	for _, tc := range tt {
@@ -194,7 +194,7 @@ func Test_RIFF_WriteTo_SmokeTest(t *testing.T) {
 			assert.Equal(t, tc.size, n)
 			size := int64(RealSize(rif.Size()) + 8)
 			assert.Equal(t, tc.size, size)
-			assert.Equal(t, tc.hash, kit.MD5Reader(t, buf))
+			assert.Equal(t, tc.hash, kit.SHA1Reader(buf))
 		})
 	}
 }
@@ -290,7 +290,7 @@ func Benchmark_RIFFReuse(b *testing.B) {
 	for _, tc := range tt {
 		b.Run(tc.pth, func(b *testing.B) {
 			b.StopTimer()
-			buf := &flexbuf.Buffer{}
+			buf := &memfs.File{}
 			_, err := buf.ReadFrom(must.Value(os.Open(tc.pth)))
 			if err != nil {
 				b.Fatal(err)
