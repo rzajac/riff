@@ -72,8 +72,8 @@ func WriteByte(t *testing.T, dst io.ByteWriter, c byte) {
 	}
 }
 
-// Skip4B reads exactly 4 bytes from r and discards them.
-// Calls t.Fatal() on error.
+// Skip4B reads exactly 4 bytes from r and discards them. Calls t.Fatal() on
+// error.
 func Skip4B(t *testing.T, r io.Reader) {
 	t.Helper()
 	n, err := r.Read(make([]byte, 4))
@@ -85,8 +85,8 @@ func Skip4B(t *testing.T, r io.Reader) {
 	}
 }
 
-// IsAllRead returns true if all bytes from the underlying buffer
-// have been read.
+// IsAllRead returns true if all bytes from the underlying buffer have been
+// read.
 func IsAllRead(r io.Reader) bool {
 	_, err := r.Read(make([]byte, 1))
 	return err == io.EOF

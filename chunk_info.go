@@ -218,7 +218,9 @@ func (ch *ChunkINFO) Reset() {
 	ch.text = ch.text[:0]
 }
 
-// InfoLabel returns human readable INFO sub-chunk label.
+// InfoLabel returns human-readable INFO sub-chunk label.
+//
+// nolint: cyclop
 func InfoLabel(lab uint32) string {
 	switch lab {
 	case LabIARL:

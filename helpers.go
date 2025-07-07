@@ -3,6 +3,7 @@ package riff
 import (
 	"bytes"
 	"encoding/binary"
+	"errors"
 	"io"
 )
 
@@ -72,7 +73,7 @@ func SkipN(r io.Reader, n uint32) error {
 	}
 
 	// If we cannot seek, we read data to black hole.
-	rf := io.Discard.(io.ReaderFrom)
+	rf := io.Discard.(io.ReaderFrom) // nolint: forcetypeassert
 	if err := LimitedRead(r, n, rf); err != nil {
 		return err
 	}
@@ -97,7 +98,7 @@ func ReadPaddingIf(r io.Reader, size uint32) (int64, error) {
 
 	n, err := io.CopyN(io.Discard, r, 1)
 	if err != nil {
-		if err == io.EOF && n != 1 {
+		if errors.Is(err, io.EOF) && n != 1 {
 			err = io.ErrUnexpectedEOF
 		}
 		return 0, err

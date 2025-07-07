@@ -4,6 +4,7 @@ package riff
 
 import (
 	"encoding/binary"
+	"errors"
 	"fmt"
 	"io"
 )
@@ -158,11 +159,11 @@ func (rif *RIFF) ReadFrom(r io.Reader) (int64, error) {
 	}
 
 	// Size needs to be corrected.
-	if err == io.EOF && rif.size != uint32(sum-8) {
+	if errors.Is(err, io.EOF) && rif.size != uint32(sum-8) {
 		rif.size = uint32(sum - 8)
 	}
 
-	if err == io.EOF {
+	if errors.Is(err, io.EOF) {
 		return sum, nil
 	}
 

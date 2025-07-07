@@ -146,7 +146,7 @@ func (ch *ChunkSMPL) ReadFrom(r io.Reader) (int64, error) {
 	sum += 36
 
 	for i := 0; i < int(ch.SampleLoopCnt); i++ {
-		loop := sampleLoopPool.Get().(*SampleLoop)
+		loop := sampleLoopPool.Get().(*SampleLoop) // nolint: forcetypeassert
 		loop.Reset()
 		if err := binary.Read(r, le, loop); err != nil {
 			return 0, fmt.Errorf(errFmtDecode, Uint32(IDsmpl), err)

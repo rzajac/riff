@@ -186,6 +186,7 @@ func Test_RIFF_WriteTo_SmokeTest(t *testing.T) {
 			// --- Then ---
 			assert.NoError(t, err)
 
+			// nolint: gocritic
 			// fil := kit.CreateFile(t, filepath.Join("tmp", filepath.Base(tc.pth)))
 			// content := kit.ReadAll(t, buf)
 			// fil.Write(content)

@@ -209,7 +209,8 @@ func (ch *ChunkFMT) WriteTo(w io.Writer) (int64, error) {
 		}
 		sum += 2
 
-		in, err := w.Write(ch.extra)
+		var in int
+		in, err = w.Write(ch.extra)
 		sum += int64(in)
 		if err != nil {
 			return sum, fmt.Errorf(errFmtEncode, Uint32(IDfmt), err)
