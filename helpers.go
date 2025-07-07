@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"encoding/binary"
 	"io"
-	"io/ioutil"
 )
 
 // StrToID converts four byte ASCII string to uint32.
@@ -73,7 +72,7 @@ func SkipN(r io.Reader, n uint32) error {
 	}
 
 	// If we cannot seek we read data to black hole.
-	rf := ioutil.Discard.(io.ReaderFrom)
+	rf := io.Discard.(io.ReaderFrom)
 	if err := LimitedRead(r, n, rf); err != nil {
 		return err
 	}
@@ -96,7 +95,7 @@ func ReadPaddingIf(r io.Reader, size uint32) (int64, error) {
 		return 0, nil
 	}
 
-	n, err := io.CopyN(ioutil.Discard, r, 1)
+	n, err := io.CopyN(io.Discard, r, 1)
 	if err != nil {
 		if err == io.EOF && n != 1 {
 			err = io.ErrUnexpectedEOF

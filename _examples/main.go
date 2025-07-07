@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	"io"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 
@@ -115,7 +114,7 @@ func fmtChunkPrint(fil *os.File) error {
 	fmt.Printf(" - Block Align: %d\n", ch.BlockAlign)
 	fmt.Printf(" - Bits Per Sample: %d\n", ch.BitsPerSample)
 
-	extra, err := ioutil.ReadAll(ch.Extra())
+	extra, err := io.ReadAll(ch.Extra())
 	if err != nil {
 		return err
 	}
