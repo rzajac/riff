@@ -46,7 +46,8 @@ func DATA(load bool) *ChunkDATA {
 	return ch
 }
 
-// Data returns reader for data. If in SkipData mode empty reader is returned.
+// Data returns reader for data. If in [SkipData] mode, an empty reader is
+// returned.
 func (ch *ChunkDATA) Data() io.Reader {
 	return bytes.NewReader(ch.data)
 }

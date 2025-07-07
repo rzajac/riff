@@ -7,20 +7,20 @@ import (
 
 // Chunk represents Resource Interchange File Format (RIFF) chunk decoder.
 type Chunk interface {
-	// ID returns a four byte (uint32) ASCII identifier of the chunk.
+	// ID returns a four-byte (uint32) ASCII identifier of the chunk.
 	ID() uint32
 
 	// Size returns chunk size in bytes. The chunk ID, size and extra
 	// padding byte (if present) is not counted in the returned value.
-	// If Chunk the has been edited this method should return the new size.
+	// If Chunk has been edited, this method should return the new size.
 	Size() uint32
 
-	// Type returns chunk type. Returns zero if chunk doesn't have
+	// Type returns chunk type. Returns zero if the chunk doesn't have
 	// the type field.
 	Type() uint32
 
-	// Multi returns true if there can be more then one chunk with
-	// given ID in the RIFF file.
+	// Multi returns true if there can be more than one chunk with a given ID
+	// in the RIFF file.
 	Multi() bool
 
 	// Chunks returns all the sub-chunks of the chunk or empty slice if the
@@ -33,11 +33,11 @@ type Chunk interface {
 
 	// ReadFrom reads bytes from r decoding and validating a chunk.
 	// It expects r to be in a position right after chunk ID.
-	// It returns actual number of bytes read and error if any.
-	// If error is returned the number of read bytes might not be accurate.
+	// It returns the actual number of bytes read and error if any.
+	// If an error is returned, the number of read bytes might not be accurate.
 	ReadFrom(r io.Reader) (int64, error)
 
-	// WriteTo writes chunk (encodes) to w. Returns number of bytes written
+	// WriteTo writes chunk (encodes) to w. Returns the number of bytes written
 	// and error if any.
 	WriteTo(w io.Writer) (int64, error)
 

@@ -2,7 +2,7 @@ package riff
 
 // Registry represents a registry of chunk decoders.
 type Registry struct {
-	// Map of chunk IDs and decoder Maker functions.
+	// Map of chunk IDs and decoder [Maker] functions.
 	makers map[uint32]Maker
 
 	// Pool of instantiated chunk decoders that can be reused.
@@ -12,7 +12,7 @@ type Registry struct {
 	raw IDMaker
 }
 
-// NewRegistry returns new instance of Registry.
+// NewRegistry returns a new instance of [Registry].
 func NewRegistry(raw IDMaker) *Registry {
 	return &Registry{
 		makers: make(map[uint32]Maker, 4),
@@ -41,8 +41,8 @@ func (reg *Registry) Put(ch Chunk) {
 	reg.pool[id] = append(reg.pool[id], ch)
 }
 
-// Get returns decoder for given ID from the pool. For unknown (not registered)
-// chunk ID decoders it returns raw decoder.
+// Get return decoder for given ID from the pool. For unknown (not registered)
+// chunk ID decoders it returns a raw decoder.
 func (reg *Registry) Get(id uint32) Chunk {
 	ch := reg.GetNoRaw(id)
 	if ch == nil {

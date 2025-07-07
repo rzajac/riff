@@ -40,7 +40,7 @@ type fmtStatic struct {
 	SampleRate uint32
 
 	// How many bytes of waveform data must be streamed to a D/A converter
-	// per second in order to play the waveform data.
+	// per second to play the waveform data.
 	// AvgByteRate = SampleRate * BlockAlign.
 	AvgByteRate uint32
 
@@ -51,12 +51,12 @@ type fmtStatic struct {
 	// This value specifies the number of bits used to define each sample.
 	// This value is usually 8, 16, 24 or 32. If the number of bits is
 	// not byte aligned (a multiple of 8) then the number of bytes used
-	// per sample is rounded up to the nearest byte size and the unused
+	// per sample is rounded up to the nearest byte size, and the unused
 	// bytes are set to 0 and ignored.
 	BitsPerSample uint16
 }
 
-// ChunkFMT represents format chunk containing information about
+// ChunkFMT represents a format chunk containing information about
 // how the waveform data is stored.
 type ChunkFMT struct {
 	// Chunk size in bytes.
@@ -68,14 +68,13 @@ type ChunkFMT struct {
 	// Extra bytes.
 	// It doesn't exist if the compression code is 0 (uncompressed PCM file)
 	// but may exist and have any value for other compression types
-	// depending on what compression information is need to decode the
+	// depending on what compression information is needed to decode the
 	// waveform data.
 	extra []byte
 
-	// For some reason even though there is no extra bytes the
-	// size of 0 is still written after main 16 byte chunk. This value
-	// controls this behaviour. When set to true the zero size will be
-	// written.
+	// For some reason, even though there are no extra bytes, the
+	// size of 0 is still written after the main 16-byte chunk. This value
+	// controls this behavior. When set to true, the zero size will be written.
 	WriteZeroExtra bool
 }
 
@@ -141,9 +140,9 @@ func (ch *ChunkFMT) ReadFrom(r io.Reader) (int64, error) {
 
 	if ch.size > FMTChunkSize {
 		// The first uint16 value in the byte slice is the uint16 length of
-		// extra format bytes which will not be part of the ch.extra.
+		// extra format bytes that will not be part of the ch.extra.
 		//
-		// If this value is not word aligned (a multiple of 2),
+		// If this value is not word-aligned (a multiple of 2),
 		// padding should be added to the end of this data to word align it,
 		// but the value should remain non-aligned.
 		var es uint16
@@ -164,8 +163,8 @@ func (ch *ChunkFMT) ReadFrom(r io.Reader) (int64, error) {
 			return sum, fmt.Errorf(errFmtDecode, Uint32(IDfmt), err)
 		}
 
-		// If length of extra format bytes is odd it means the
-		// padding byte  was added to the end.
+		// If the length of extra format bytes is odd, it means the padding
+		// byte was added to the end.
 		n, err := ReadPaddingIf(r, uint32(es))
 		sum += n
 		if err != nil {

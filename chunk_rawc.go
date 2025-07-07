@@ -10,7 +10,7 @@ import (
 // idRAWC represents raw chunk ID used only in error reporting from RAWC chunk.
 const idRAWC uint32 = 0x52415743
 
-// ChunkRAWC is decoder for unknown (not registered) chunks.
+// ChunkRAWC is a decoder for unknown (not registered) chunks.
 type ChunkRAWC struct {
 	// Chunk ID.
 	id uint32
@@ -26,14 +26,14 @@ type ChunkRAWC struct {
 	load bool
 }
 
-// RAWCMake returns IDMaker function for creating ChunkRAWC instances.
+// RAWCMake returns [IDMaker] function for creating [ChunkRAWC] instances.
 func RAWCMake(load bool) IDMaker {
 	return func(id uint32) Chunk {
 		return RAWC(id, load)
 	}
 }
 
-// RAWC returns new instance of ChunkRAWC for given ID.
+// RAWC returns a new instance of [ChunkRAWC] for given ID.
 func RAWC(id uint32, load bool) *ChunkRAWC {
 	ch := &ChunkRAWC{
 		id:   id,

@@ -4,7 +4,7 @@ import (
 	"sync"
 )
 
-// SampleLoop represents sample loop used in ChunkSMPL.
+// SampleLoop represents a sample loop used in [ChunkSMPL].
 //
 // Source:
 // https://sites.google.com/site/musicgapi/technical-documents/wav-file-format
@@ -12,7 +12,7 @@ type SampleLoop struct {
 	// The Cue Point ID specifies the unique ID that corresponds to one
 	// of the defined cue points in the cue point list. Furthermore,
 	// this ID corresponds to any labels defined in the associated data
-	// list chunk which allows text labels to be assigned to the various
+	// list chunk, which allows text labels to be assigned to the various
 	// sample loops.
 	CuePointID uint32
 
@@ -20,10 +20,10 @@ type SampleLoop struct {
 	// Loop types:
 	//
 	// - 0 - Loop forward (normal)
-	// - 1 - Alternating loop (forward/backward, also known as Ping Pong)
+	// - 1 - Alternating loop (forward/backward, also known as Ping-Pong)
 	// - 2 - Loop backward (reverse)
 	// - 3 - 31	Reserved for future standard types
-	// - 32 - 0xFFFFFFFF Sampler specific types (defined by manufacturer)
+	// - 32 - 0xFFFFFFFF Sampler specific types (defined by a manufacturer)
 	//
 	Type uint32
 
@@ -36,7 +36,7 @@ type SampleLoop struct {
 	End uint32
 
 	// The fractional value specifies a fraction of a sample at which to loop.
-	// This allows a loop to be fine tuned at a resolution greater than one
+	// This allows a loop to be fine-tuned at a resolution greater than one
 	// sample. The value can range from 0x00000000 to 0xFFFFFFFF.
 	// A value of 0 means no fraction,
 	// a value of 0x80000000 means 1/2 of a sample length.

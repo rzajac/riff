@@ -24,7 +24,7 @@ type smplStatic struct {
 	// The value is stored with some extra information to enable
 	// translation to the value used in a MIDI System Exclusive
 	// transmission to the sampler. The high byte indicates the number
-	// of low order bytes (1 or 3) that are valid for the manufacturer
+	// of low-order bytes (1 or 3) that are valid for the manufacturer
 	// code. For example, the value for Digidesign will be 0x01000013 (0x13)
 	// and the value for Microsoft will be 0x30000041 (0x00, 0x00, 0x41).
 	//
@@ -53,8 +53,8 @@ type smplStatic struct {
 
 	// The MIDI pitch fraction specifies the fraction of a semitone up
 	// from the specified MIDI unity note field. A value of 0x80000000
-	// means 1/2 semitone (50 cents) and a value of 0x00000000 means no
-	// fine tuning between semitones.
+	// means 1/2 semitone (50 cents), and a value of 0x00000000 means no
+	// fine-tuning between semitones.
 	MIDIPitchFraction uint32
 
 	// The SMPTE format specifies the Society of Motion Pictures and
@@ -80,15 +80,15 @@ type smplStatic struct {
 	// frames (0 to -1).
 	SMPTEOffset uint32
 
-	// The sample loops field specifies the number Sample Loop definitions
-	// in the following list. This value may be set to 0 meaning that no
+	// The sample loops field specifies the number of Sample Loop definitions
+	// in the following list. This value may be set to 0, meaning that no
 	// sample loops follow.
 	SampleLoopCnt uint32
 
 	// The sampler data value specifies the number of bytes that will follow
 	// this chunk (including the entire sample loop list). This value is
 	// greater than 0 when an application needs to save additional
-	// information. This value is reflected in this chunks data size value.
+	// information. This value is reflected in this chunk data size value.
 	SamplerDataCnt uint32
 }
 
@@ -113,10 +113,10 @@ type ChunkSMPL struct {
 	sampleData []byte
 }
 
-// SMPLMake is a Maker function for creating ChunkSMPL instances.
+// SMPLMake is a [Maker] function for creating [ChunkSMPL] instances.
 func SMPLMake() Chunk { return SMPL() }
 
-// SMPL returns new instance of ChunkSMPL.
+// SMPL returns a new instance of [ChunkSMPL].
 func SMPL() *ChunkSMPL {
 	return &ChunkSMPL{}
 }
@@ -148,7 +148,6 @@ func (ch *ChunkSMPL) ReadFrom(r io.Reader) (int64, error) {
 	for i := 0; i < int(ch.SampleLoopCnt); i++ {
 		loop := sampleLoopPool.Get().(*SampleLoop)
 		loop.Reset()
-		// loop := &SampleLoop{}
 		if err := binary.Read(r, le, loop); err != nil {
 			return 0, fmt.Errorf(errFmtDecode, Uint32(IDsmpl), err)
 		}
@@ -156,7 +155,7 @@ func (ch *ChunkSMPL) ReadFrom(r io.Reader) (int64, error) {
 		sum += 24
 	}
 
-	// We trust size more then SamplerDataCnt.
+	// We trust size more than SamplerDataCnt.
 	extra := int(ch.size) - 36 - int(ch.SampleLoopCnt*24)
 	if extra < 0 {
 		err := fmt.Errorf("invalid %s chunk values", Uint32(IDsmpl))

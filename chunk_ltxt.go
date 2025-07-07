@@ -24,26 +24,26 @@ type ltxtStatic struct {
 	// region or section spans.
 	SamLen uint32
 
-	// The purpose field specifies what the text is used for. For example
+	// The purpose field specifies what the text is used for. For example,
 	// a value of "scrp" means script text, and "capt" means close-caption.
 	// There are several more purpose IDs, but they are meant to be used
 	// with other types of RIFF files (not usually found in WAVE files).
 	PurID uint32
 
 	// Information about the location used by the text and is typically
-	// used for queries to obtain information from the operating system.
+	// used for queries to collect information from the operating system.
 	Country uint16
 
 	// Information about the language used by the text and is typically
-	// used for queries to obtain information from the operating system.
+	// used for queries to collect information from the operating system.
 	Language uint16
 
 	// Information about the dialect used by the text and is typically
-	// used for queries to obtain information from the operating system.
+	// used for queries to collect information from the operating system.
 	Dialect uint16
 
 	// Information about the code page used by the text and is typically
-	// used for queries to obtain information from the operating system.
+	// used for queries to collect information from the operating system.
 	CodePage uint16
 }
 
@@ -57,7 +57,7 @@ type ChunkLTXT struct {
 
 	ltxtStatic
 
-	// Text is a null terminated string of characters. If the number of
+	// Text is a null-terminated string of characters. If the number of
 	// characters in the string is not even, padding must be appended to
 	// the string. The appended padding is not considered in the note
 	// chunk's chunk size field.
@@ -104,8 +104,8 @@ func (ch *ChunkLTXT) ReadFrom(r io.Reader) (int64, error) {
 		return sum, fmt.Errorf(errFmtDecode, linkids(IDINFO, IDltxt), err)
 	}
 
-	// If length of text bytes is odd it means the
-	// padding byte was added to the end.
+	// If the length of text bytes is odd, it means the padding byte was added
+	// to the end.
 	n, err := ReadPaddingIf(r, ch.size)
 	sum += n
 	if err != nil {

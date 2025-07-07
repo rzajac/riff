@@ -9,7 +9,7 @@ import (
 // IDLIST represents "LIST" chunk ID.
 const IDLIST uint32 = 0x4c495354
 
-// IDs of sub-chunks of LIST chunk.
+// IDs of sub-chunks of the LIST chunk.
 const (
 	// IDlabl represents LIST sub-chunk ID "labl".
 	IDlabl uint32 = 0x6C61626C
@@ -37,14 +37,14 @@ type ChunkLIST struct {
 	load bool
 }
 
-// LISTMake returns Maker function for creating ChunkLIST instances.
+// LISTMake returns [Maker] function for creating [ChunkLIST] instances.
 func LISTMake(load bool, reg *Registry) Maker {
 	return func() Chunk {
 		return LIST(load, reg)
 	}
 }
 
-// LIST returns new instance of ChunkLIST.
+// LIST returns a new instance of [ChunkLIST].
 func LIST(load bool, reg *Registry) *ChunkLIST {
 	ch := &ChunkLIST{
 		load: load,
@@ -134,7 +134,7 @@ func (ch *ChunkLIST) WriteTo(w io.Writer) (int64, error) {
 	}
 
 	var sum int64
-	size := ch.chunks.Size() + 4 // Add four bytes for list type.
+	size := ch.chunks.Size() + 4 // Add four bytes for the list type.
 
 	n, err := WriteIDAndSize(w, IDLIST, size)
 	sum += n

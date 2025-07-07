@@ -7,10 +7,10 @@ import (
 	"io"
 )
 
-// ChunkLABL represents "labl" chunk which is always contained inside of
-// an associated "LIST" chunk. It's used to associate a text label with
-// a Cue Point. This information is often displayed next to markers or
-// flags in digital audio editors.
+// ChunkLABL represents the "labl" chunk which is always contained inside an
+// associated "LIST" chunk. It's used to associate a text label with a Cue
+// Point. This information is often displayed next to markers or flags in
+// digital audio editors.
 type ChunkLABL struct {
 	// Chunk size in bytes.
 	// The ID and extra padding byte is not counted in the chunk size.
@@ -29,10 +29,10 @@ type ChunkLABL struct {
 	label []byte
 }
 
-// LABLMake is a Maker function for creating ChunkLABL instances.
+// LABLMake is a [Maker] function for creating [ChunkLABL] instances.
 func LABLMake() Chunk { return LABL() }
 
-// LABL returns new instance of ChunkLABL.
+// LABL returns a new instance of [ChunkLABL].
 func LABL() *ChunkLABL {
 	return &ChunkLABL{}
 }
@@ -68,8 +68,8 @@ func (ch *ChunkLABL) ReadFrom(r io.Reader) (int64, error) {
 		return sum, fmt.Errorf(errFmtDecode, linkids(IDINFO, IDlabl), err)
 	}
 
-	// If length of label bytes is odd it means the
-	// padding byte was added to the end.
+	// If the length of label bytes is odd, it means the padding byte was added
+	// to the end.
 	n, err := ReadPaddingIf(r, ch.size)
 	sum += n
 	if err != nil {

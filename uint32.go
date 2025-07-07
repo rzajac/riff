@@ -6,10 +6,10 @@ import (
 	"io"
 )
 
-// Uint32 helper type wrapping uint32 and adding methods.
+// Uint32 is a helper type wrapping uint32 and adding methods.
 type Uint32 uint32
 
-// String returns ASCII representation of the uint32 integer.
+// String returns the ASCII representation of the uint32 integer.
 func (d Uint32) String() string {
 	return string(byte(d>>24&0x000000FF)) +
 		string(byte(d>>16&0x000000FF)) +

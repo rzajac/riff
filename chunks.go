@@ -4,10 +4,10 @@ import (
 	"io"
 )
 
-// Chunks represents slice of sub-chunks.
+// Chunks represent slice of sub-chunks.
 type Chunks []Chunk
 
-// First returns first chunk with given ID.
+// First returns the first chunk with the given ID.
 func (chs Chunks) First(id uint32) Chunk {
 	for _, ch := range chs {
 		if ch.ID() == id {
@@ -17,7 +17,7 @@ func (chs Chunks) First(id uint32) Chunk {
 	return nil
 }
 
-// Count returns number of chunks with given id.
+// Count returns the number of chunks with the given ID.
 func (chs Chunks) Count(id uint32) int {
 	var cnt int
 	for _, ch := range chs {
@@ -28,7 +28,7 @@ func (chs Chunks) Count(id uint32) int {
 	return cnt
 }
 
-// IDs returns chunk IDs in order they were seen in the file.
+// IDs return chunk IDs in order they were seen in the file.
 func (chs Chunks) IDs() []uint32 {
 	ids := make([]uint32, len(chs))
 	for i, ch := range chs {
