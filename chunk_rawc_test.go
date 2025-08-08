@@ -6,9 +6,10 @@ import (
 	"io"
 	"testing"
 
+	"github.com/ctx42/memfs/pkg/memfs"
 	"github.com/ctx42/testing/pkg/assert"
 	"github.com/ctx42/testing/pkg/kit/iokit"
-	"github.com/ctx42/testing/pkg/kit/memfs"
+	"github.com/ctx42/testing/pkg/must"
 
 	"github.com/rzajac/riff/internal/test"
 )
@@ -115,7 +116,7 @@ func Test_ChunkRAWC_ReadFrom_SkipData_SeekAvailable(t *testing.T) {
 
 func Test_ChunkRAWC_ReadFrom_SkipData_SeekNotAvailable(t *testing.T) {
 	// --- Given ---
-	tmp := &memfs.File{}
+	tmp := must.Value(memfs.NewFile("file"))
 	test.WriteUint32LE(t, tmp, 3)                  // Chunk size (4).
 	test.WriteBytes(t, tmp, []byte{'A', 'B', 'C'}) // Chunk data (*).
 	test.WriteByte(t, tmp, 0)                      // Padding byte (1).

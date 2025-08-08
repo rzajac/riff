@@ -5,9 +5,9 @@ import (
 	"os"
 	"testing"
 
+	"github.com/ctx42/memfs/pkg/memfs"
 	"github.com/ctx42/testing/pkg/assert"
 	"github.com/ctx42/testing/pkg/kit"
-	"github.com/ctx42/testing/pkg/kit/memfs"
 	"github.com/ctx42/testing/pkg/must"
 )
 
@@ -291,7 +291,7 @@ func Benchmark_RIFFReuse(b *testing.B) {
 	for _, tc := range tt {
 		b.Run(tc.pth, func(b *testing.B) {
 			b.StopTimer()
-			buf := &memfs.File{}
+			buf := must.Value(memfs.NewFile("file"))
 			_, err := buf.ReadFrom(must.Value(os.Open(tc.pth)))
 			if err != nil {
 				b.Fatal(err)

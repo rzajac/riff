@@ -5,9 +5,9 @@ import (
 	"io"
 	"testing"
 
+	"github.com/ctx42/memfs/pkg/memfs"
 	"github.com/ctx42/testing/pkg/assert"
 	"github.com/ctx42/testing/pkg/kit/iokit"
-	"github.com/ctx42/testing/pkg/kit/memfs"
 	"github.com/ctx42/testing/pkg/mock"
 	"github.com/ctx42/testing/pkg/must"
 )
@@ -120,7 +120,7 @@ func Test_ReadChunkSize_Error(t *testing.T) {
 func Test_LimitedRead(t *testing.T) {
 	// --- Given ---
 	src := bytes.NewReader([]byte{0, 1, 2, 3})
-	dst := &memfs.File{}
+	dst := must.Value(memfs.NewFile("file"))
 
 	// --- When ---
 	err := LimitedRead(src, 3, dst)
@@ -133,7 +133,7 @@ func Test_LimitedRead(t *testing.T) {
 func Test_LimitedRead_ErrUnexpectedEOF(t *testing.T) {
 	// --- Given ---
 	src := bytes.NewReader([]byte{0, 1, 2, 3})
-	dst := &memfs.File{}
+	dst := must.Value(memfs.NewFile("file"))
 
 	// --- When ---
 	err := LimitedRead(src, 30, dst)
@@ -146,7 +146,7 @@ func Test_LimitedRead_Error(t *testing.T) {
 	// --- Given ---
 	src := iokit.NewReaderMock(t)
 	src.OnRead(mock.Any).Return(0, iokit.ErrRead)
-	dst := &memfs.File{}
+	dst := must.Value(memfs.NewFile("file"))
 
 	// --- When ---
 	err := LimitedRead(src, 3, dst)
