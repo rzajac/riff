@@ -1,3 +1,6 @@
+## v0.2.3 (Fri, 08 Aug 2025 14:11:17 UTC)
+- chore: Update dependencies.
+
 ## v0.2.2 (Mon, 07 Jul 2025 09:08:39 UTC)
 - test: switch the testing framework from github.com/stretchr/testify to github.com/ctx42/testing.
 - chore: remove usages of deprecated io/ioutil.
