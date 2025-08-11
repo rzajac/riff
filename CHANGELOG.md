@@ -1,3 +1,6 @@
+## v0.2.4 (Mon, 11 Aug 2025 11:06:16 UTC)
+- Add check for invalid fmt chunk extra bytes size.
+
 ## v0.2.3 (Fri, 08 Aug 2025 14:11:17 UTC)
 - chore: Update dependencies.
 
