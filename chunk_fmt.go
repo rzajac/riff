@@ -156,6 +156,11 @@ func (ch *ChunkFMT) ReadFrom(r io.Reader) (int64, error) {
 			ch.WriteZeroExtra = true
 		}
 
+		pad := es % 2
+		if extra != int64(es+pad) {
+			return sum, fmt.Errorf(errFmtDecode, Uint32(IDfmt), ErrChunkSizeMismatch)
+		}
+
 		ch.extra = grow(ch.extra, int(es))
 		in, err := io.ReadFull(r, ch.extra)
 		sum += int64(in)
