@@ -170,7 +170,7 @@ func Test_ChunkDATA_ReadFrom_Odd(t *testing.T) {
 }
 
 func Test_ChunkDATA_ReadFrom_Errors(t *testing.T) {
-	// Reading less then 20 bytes should always result in an error.
+	// Reading less than 20 bytes should always result in an error.
 	for i := 1; i < 20; i++ {
 		// --- Given ---
 		src := dataChunkOdd(t)

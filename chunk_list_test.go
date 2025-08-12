@@ -163,6 +163,22 @@ func Test_ChunkLIST_ReadFrom_Errors(t *testing.T) {
 	}
 }
 
+func Test_ChunkLIST_ReadFrom_TooShortError(t *testing.T) {
+	// --- Given ---
+	reg := NewRegistry(RAWCMake(LoadData))
+	src := &bytes.Buffer{}
+	test.WriteUint32LE(t, src, 3)
+
+	// --- When ---
+	ch := LIST(LoadData, reg)
+	n, err := ch.ReadFrom(src)
+
+	// --- Then ---
+	assert.ErrorIs(t, ErrTooShort, err)
+	assert.ErrorContain(t, "LIST chunk", err)
+	assert.Equal(t, int64(4), n)
+}
+
 func Test_ChunkLIST_WriteTo(t *testing.T) {
 	tt := []struct {
 		testN string

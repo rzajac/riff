@@ -7,6 +7,10 @@ import (
 	"io"
 )
 
+// LABLChunkSize represents the size of labl chunk static part in bytes.
+// Does not count ID and label bytes.
+const LABLChunkSize uint32 = 4
+
 // ChunkLABL represents the "labl" chunk which is always contained inside an
 // associated "LIST" chunk. It's used to associate a text label with a Cue
 // Point. This information is often displayed next to markers or flags in
@@ -56,12 +60,16 @@ func (ch *ChunkLABL) ReadFrom(r io.Reader) (int64, error) {
 	}
 	sum += 4
 
+	if ch.size < LABLChunkSize {
+		return sum, fmt.Errorf(errFmtDecode, linkids(IDINFO, IDlabl), ErrTooShort)
+	}
+
 	if err := binary.Read(r, le, &ch.CuePointID); err != nil {
 		return sum, fmt.Errorf(errFmtDecode, linkids(IDINFO, IDlabl), err)
 	}
-	sum += 4
+	sum += int64(LABLChunkSize)
 
-	ch.label = grow(ch.label, int(ch.size-4)) // Subtract pid field size.
+	ch.label = grow(ch.label, int(ch.size-LABLChunkSize)) // Subtract pid field size.
 	in, err := io.ReadFull(r, ch.label)
 	sum += int64(in)
 	if err != nil {
@@ -91,7 +99,7 @@ func (ch *ChunkLABL) WriteTo(w io.Writer) (int64, error) {
 	if err = binary.Write(w, le, ch.CuePointID); err != nil {
 		return sum, fmt.Errorf(errFmtEncode, linkids(IDINFO, IDlabl), err)
 	}
-	sum += 4
+	sum += int64(LABLChunkSize)
 
 	in, err := w.Write(ch.label)
 	sum += int64(in)

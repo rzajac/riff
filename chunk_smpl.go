@@ -10,6 +10,13 @@ import (
 // IDsmpl represents "smpl" chunk ID.
 const IDsmpl uint32 = 0x736d706c
 
+// SMPLChunkSize represents the size of smpl chunk static part in bytes.
+// Does not count ID, SampleLoops and sampleData bytes.
+const SMPLChunkSize uint32 = 36
+
+// SampleLoopCntSize represents the size of single sample loop in bytes.
+const SampleLoopCntSize uint32 = 24
+
 // smplStatic represents chunk static data (always there).
 // This struct is defined separately to allow for binary
 // decoding / encoding in one call to binary.Read / binary.Write.
@@ -140,10 +147,20 @@ func (ch *ChunkSMPL) ReadFrom(r io.Reader) (int64, error) {
 	}
 	sum += 4
 
+	if ch.size < SMPLChunkSize {
+		return sum, fmt.Errorf(errFmtDecode, Uint32(IDsmpl), ErrTooShort)
+	}
+
 	if err := binary.Read(r, le, &ch.smplStatic); err != nil {
 		return sum, fmt.Errorf(errFmtDecode, Uint32(IDsmpl), err)
 	}
-	sum += 36
+	sum += int64(SMPLChunkSize)
+
+	// We trust size more than SamplerDataCnt.
+	extra := int(ch.size) - int(SMPLChunkSize) - int(ch.SampleLoopCnt*SampleLoopCntSize)
+	if extra < 0 {
+		return sum, fmt.Errorf(errFmtDecode, Uint32(IDsmpl), ErrChunkSizeMismatch)
+	}
 
 	for i := 0; i < int(ch.SampleLoopCnt); i++ {
 		loop := sampleLoopPool.Get().(*SampleLoop) // nolint: forcetypeassert
@@ -152,16 +169,10 @@ func (ch *ChunkSMPL) ReadFrom(r io.Reader) (int64, error) {
 			return 0, fmt.Errorf(errFmtDecode, Uint32(IDsmpl), err)
 		}
 		ch.SampleLoops = append(ch.SampleLoops, loop)
-		sum += 24
+		sum += int64(SampleLoopCntSize)
 	}
 
-	// We trust size more than SamplerDataCnt.
-	extra := int(ch.size) - 36 - int(ch.SampleLoopCnt*24)
-	if extra < 0 {
-		err := fmt.Errorf("invalid %s chunk values", Uint32(IDsmpl))
-		return sum, fmt.Errorf(errFmtDecode, Uint32(IDsmpl), err)
-	}
-	ch.sampleData = grow(ch.sampleData, extra)
+	ch.sampleData = grow(ch.sampleData, int(extra))
 	in, err := io.ReadFull(r, ch.sampleData)
 	sum += int64(in)
 	if err != nil {
@@ -180,8 +191,8 @@ func (ch *ChunkSMPL) ReadFrom(r io.Reader) (int64, error) {
 func (ch *ChunkSMPL) WriteTo(w io.Writer) (int64, error) {
 	var sum int64
 
-	size := uint32(36) +
-		uint32(len(ch.SampleLoops))*24 +
+	size := SMPLChunkSize +
+		uint32(len(ch.SampleLoops))*SampleLoopCntSize +
 		uint32(len(ch.sampleData))
 
 	ch.SampleLoopCnt = uint32(len(ch.SampleLoops))
@@ -196,13 +207,13 @@ func (ch *ChunkSMPL) WriteTo(w io.Writer) (int64, error) {
 	if err = binary.Write(w, le, ch.smplStatic); err != nil {
 		return sum, fmt.Errorf(errFmtEncode, Uint32(IDsmpl), err)
 	}
-	sum += 36
+	sum += int64(SMPLChunkSize)
 
 	for i := 0; i < len(ch.SampleLoops); i++ {
 		if err = binary.Write(w, le, ch.SampleLoops[i]); err != nil {
 			return sum, fmt.Errorf(errFmtEncode, Uint32(IDsmpl), err)
 		}
-		sum += 24
+		sum += int64(SampleLoopCntSize)
 	}
 
 	lsd := len(ch.sampleData)

@@ -89,7 +89,7 @@ func Test_ChunkLABL_ReadFrom_TextLenOdd(t *testing.T) {
 }
 
 func Test_ChunkLABL_ReadFrom_Errors(t *testing.T) {
-	// Reading less then 12 bytes should always result in an error.
+	// Reading less than 12 bytes should always result in an error.
 	for i := 1; i < 12; i++ {
 		// --- Given ---
 		src := lablChunkTextLenEven(t)
@@ -103,6 +103,21 @@ func Test_ChunkLABL_ReadFrom_Errors(t *testing.T) {
 			t.Logf("errro i=%d", i)
 		}
 	}
+}
+
+func Test_ChunkLABL_ReadFrom_TooShortError(t *testing.T) {
+	// --- Given ---
+	src := &bytes.Buffer{}
+	test.WriteUint32LE(t, src, 3)
+
+	// --- When ---
+	ch := LABL()
+	n, err := ch.ReadFrom(src)
+
+	// --- Then ---
+	assert.ErrorIs(t, ErrTooShort, err)
+	assert.ErrorContain(t, "INFO:labl chunk", err)
+	assert.Equal(t, int64(4), n)
 }
 
 func Test_ChunkLABL_WriteTo(t *testing.T) {

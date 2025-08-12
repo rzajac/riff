@@ -9,6 +9,9 @@ import (
 // IDLIST represents "LIST" chunk ID.
 const IDLIST uint32 = 0x4c495354
 
+// ListTypeSize represents the size of list type in bytes.
+const ListTypeSize uint32 = 4
+
 // IDs of sub-chunks of the LIST chunk.
 const (
 	// IDlabl represents LIST sub-chunk ID "labl".
@@ -68,10 +71,14 @@ func (ch *ChunkLIST) ReadFrom(r io.Reader) (int64, error) {
 	}
 	sum += 4
 
+	if ch.size < ListTypeSize {
+		return sum, fmt.Errorf(errFmtDecode, Uint32(IDLIST), ErrTooShort)
+	}
+
 	if err := binary.Read(r, be, &ch.ListType); err != nil {
 		return sum, fmt.Errorf(errFmtDecode, Uint32(IDLIST), err)
 	}
-	sum += 4
+	sum += int64(ListTypeSize)
 
 	var mkr IDMaker
 	switch ch.ListType {
