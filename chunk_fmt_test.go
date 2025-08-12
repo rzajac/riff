@@ -205,7 +205,7 @@ func Test_ChunkFMT_ReadFrom_ExtraBytesOdd(t *testing.T) {
 }
 
 func Test_ChunkFMT_ReadFrom_Errors(t *testing.T) {
-	// Reading less then 26 bytes should always result in an error.
+	// Reading less than 26 bytes should always result in an error.
 	for i := 1; i < 26; i++ {
 		// --- Given ---
 		src := fmtChunkWithExtraBytesOdd(t)
@@ -245,7 +245,7 @@ func Test_ChunkFMT_ReadFrom_ExtraBytesOfZeroLength(t *testing.T) {
 	assert.True(t, test.IsAllRead(src))
 }
 
-func Test_ChunkFMT_ReadFrom_SizeLessThen16Error(t *testing.T) {
+func Test_ChunkFMT_ReadFrom_TooShortError(t *testing.T) {
 	// --- Given ---
 	src := &bytes.Buffer{}
 	test.WriteUint32LE(t, src, 15)
@@ -255,7 +255,8 @@ func Test_ChunkFMT_ReadFrom_SizeLessThen16Error(t *testing.T) {
 	n, err := ch.ReadFrom(src)
 
 	// --- Then ---
-	assert.ErrorContain(t, "error decoding fmt  chunk: ", err)
+	assert.ErrorIs(t, ErrTooShort, err)
+	assert.ErrorContain(t, "fmt  chunk", err)
 	assert.Equal(t, int64(4), n)
 }
 
@@ -285,6 +286,7 @@ func Test_ChunkFMT_ReadFrom_ExtraInvalidSizeEven(t *testing.T) {
 
 	// --- Then ---
 	assert.ErrorIs(t, ErrChunkSizeMismatch, err)
+	assert.ErrorContain(t, "fmt  chunk", err)
 	assert.Equal(t, int64(22), n)
 }
 
@@ -299,6 +301,7 @@ func Test_ChunkFMT_ReadFrom_ExtraInvalidSizeOdd(t *testing.T) {
 
 	// --- Then ---
 	assert.ErrorIs(t, ErrChunkSizeMismatch, err)
+	assert.ErrorContain(t, "fmt  chunk", err)
 	assert.Equal(t, int64(22), n)
 }
 
@@ -315,7 +318,7 @@ func Test_ChunkFMT_Reset(t *testing.T) {
 	ch.Reset()
 
 	// --- Then ---
-	assert.Equal(t, uint32(16), ch.Size())
+	assert.Equal(t, uint32(0), ch.Size())
 	assert.Equal(t, CompNone, ch.CompCode)
 	assert.Equal(t, uint16(0), ch.ChannelCnt)
 	assert.Equal(t, uint32(0), ch.SampleRate)

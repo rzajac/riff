@@ -10,6 +10,10 @@ import (
 // IDltxt represents LIST sub-chunk ID "ltxt".
 const IDltxt uint32 = 0x6C747874
 
+// LTXTChunkSize represents the size of ltxt chunk static part in bytes.
+// Does not count ID and text bytes.
+const LTXTChunkSize uint32 = 20
+
 // ltxtStatic represents chunk static data (always there).
 // This struct is defined separately to allow for binary
 // decoding / encoding in one call to binary.Read / binary.Write.
@@ -91,12 +95,16 @@ func (ch *ChunkLTXT) ReadFrom(r io.Reader) (int64, error) {
 	}
 	sum += 4
 
+	if ch.size < LTXTChunkSize {
+		return sum, fmt.Errorf(errFmtDecode, linkids(IDINFO, IDltxt), ErrTooShort)
+	}
+
 	if err := binary.Read(r, le, &ch.ltxtStatic); err != nil {
 		return sum, fmt.Errorf(errFmtDecode, linkids(IDINFO, IDltxt), err)
 	}
-	sum += 20
+	sum += int64(LTXTChunkSize)
 
-	tl := int(ch.size - 20) // Subtract ltxtStatic fields size.
+	tl := int(ch.size - LTXTChunkSize) // Subtract ltxtStatic fields size.
 	ch.text = grow(ch.text, tl)
 	in, err := io.ReadFull(r, ch.text)
 	sum += int64(in)
@@ -126,7 +134,7 @@ func (ch *ChunkLTXT) WriteTo(w io.Writer) (int64, error) {
 	if err = binary.Write(w, le, ch.ltxtStatic); err != nil {
 		return sum, fmt.Errorf(errFmtEncode, linkids(IDINFO, IDltxt), err)
 	}
-	sum += 20
+	sum += int64(LTXTChunkSize)
 
 	in, err := w.Write(ch.text)
 	sum += int64(in)

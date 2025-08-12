@@ -101,7 +101,7 @@ func Test_ChunkINFO_ReadFrom_TextLenOdd(t *testing.T) {
 }
 
 func Test_ChunkINFO_ReadFrom_Errors(t *testing.T) {
-	// Reading less then 8 bytes should always result in an error.
+	// Reading less than 8 bytes should always result in an error.
 	for i := 1; i < 8; i++ {
 		// --- Given ---
 		src := infoChunkTextLenEven(t)

@@ -11,8 +11,8 @@ import (
 // IDfmt represents "fmt " chunk ID.
 const IDfmt uint32 = 0x666d7420
 
-// FMTChunkSize represents the size of fmt chunk in bytes
-// without ID and extra formatting bytes.
+// FMTChunkSize represents the size of fmt chunk static part in bytes.
+// Does not count ID and extra formatting bytes.
 const FMTChunkSize uint32 = 16
 
 // Compression codes.
@@ -136,7 +136,7 @@ func (ch *ChunkFMT) ReadFrom(r io.Reader) (int64, error) {
 	if err := binary.Read(r, le, &ch.fmtStatic); err != nil {
 		return sum, fmt.Errorf(errFmtDecode, Uint32(IDfmt), err)
 	}
-	sum += 16
+	sum += int64(FMTChunkSize)
 
 	if ch.size > FMTChunkSize {
 		// The first uint16 value in the byte slice is the uint16 length of
@@ -151,13 +151,11 @@ func (ch *ChunkFMT) ReadFrom(r io.Reader) (int64, error) {
 		}
 		sum += 2
 
-		extra := int64(ch.size-FMTChunkSize) - 2 // Subtract uint16 size.
+		extra := uint32(ch.size-FMTChunkSize) - 2 // Subtract uint16 size.
 		if extra == 0 {
 			ch.WriteZeroExtra = true
 		}
-
-		pad := es % 2
-		if extra != int64(es+pad) {
+		if extra != RealSize(uint32(es)) {
 			return sum, fmt.Errorf(errFmtDecode, Uint32(IDfmt), ErrChunkSizeMismatch)
 		}
 
@@ -189,7 +187,7 @@ func (ch *ChunkFMT) ReadFrom(r io.Reader) (int64, error) {
 func (ch *ChunkFMT) WriteTo(w io.Writer) (int64, error) {
 	var sum int64
 
-	size := uint32(16)
+	size := FMTChunkSize
 	eln := len(ch.extra)
 	if eln > 0 || ch.WriteZeroExtra {
 		// Adding 2 for extra format bytes size.
@@ -205,7 +203,7 @@ func (ch *ChunkFMT) WriteTo(w io.Writer) (int64, error) {
 	if err = binary.Write(w, le, ch.fmtStatic); err != nil {
 		return sum, fmt.Errorf(errFmtEncode, Uint32(IDfmt), err)
 	}
-	sum += 16
+	sum += int64(FMTChunkSize)
 
 	if eln > 0 || ch.WriteZeroExtra {
 		// Write size of extra bytes.
@@ -238,7 +236,7 @@ func (ch *ChunkFMT) WriteTo(w io.Writer) (int64, error) {
 }
 
 func (ch *ChunkFMT) Reset() {
-	ch.size = 16
+	ch.size = 0
 	ch.CompCode = 0
 	ch.ChannelCnt = 0
 	ch.SampleRate = 0

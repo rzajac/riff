@@ -15,7 +15,7 @@ var (
 
 	// ErrChunkSizeMismatch is returned when a chunk size mismatch with its
 	// content.
-	ErrChunkSizeMismatch = errors.New("chunks size mismatch")
+	ErrChunkSizeMismatch = errors.New("chunk size mismatch")
 
 	// ErrSkipDataMode is returned when the decoder in [SkipData] mode
 	// is used in write context (e.x. calling WriteTo method).

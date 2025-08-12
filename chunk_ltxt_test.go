@@ -113,7 +113,7 @@ func Test_ChunkLTXT_ReadFrom_TextLenOdd(t *testing.T) {
 }
 
 func Test_ChunkLTXT_ReadFrom_Errors(t *testing.T) {
-	// Reading less then 12 bytes should always result in an error.
+	// Reading less than 12 bytes should always result in an error.
 	for i := 1; i < 12; i++ {
 		// --- Given ---
 		src := ltxtChunkTextLenEven(t)
@@ -125,6 +125,21 @@ func Test_ChunkLTXT_ReadFrom_Errors(t *testing.T) {
 		// --- Then ---
 		assert.Error(t, err)
 	}
+}
+
+func Test_ChunkLTXT_ReadFrom_TooShortError(t *testing.T) {
+	// --- Given ---
+	src := &bytes.Buffer{}
+	test.WriteUint32LE(t, src, 19)
+
+	// --- When ---
+	ch := LTXT()
+	n, err := ch.ReadFrom(src)
+
+	// --- Then ---
+	assert.ErrorIs(t, ErrTooShort, err)
+	assert.ErrorContain(t, "INFO:ltxt chunk", err)
+	assert.Equal(t, int64(4), n)
 }
 
 func Test_ChunkLTXT_WriteTo(t *testing.T) {
