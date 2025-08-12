@@ -1,3 +1,6 @@
+## v0.2.5 (Tue, 12 Aug 2025 11:49:19 UTC)
+- Add checks for invalid chunks sizes.
+
 ## v0.2.4 (Mon, 11 Aug 2025 11:06:16 UTC)
 - Add check for invalid fmt chunk extra bytes size.
 
