@@ -50,7 +50,7 @@ func dataChunkOdd(t *testing.T) io.Reader {
 
 func Test_ChunkDATA_DATA_SkipDataMode(t *testing.T) {
 	// --- When ---
-	ch := DATA(SkipData)
+	ch := DATA()
 
 	// --- Then ---
 	assert.Equal(t, IDdata, ch.ID())
@@ -65,7 +65,7 @@ func Test_ChunkDATA_DATA_SkipDataMode(t *testing.T) {
 
 func Test_ChunkDATA_DATA_LoadDataMode(t *testing.T) {
 	// --- When ---
-	ch := DATA(LoadData)
+	ch := DATA(WithLoadData())
 
 	// --- Then ---
 	assert.Equal(t, IDdata, ch.ID())
@@ -80,7 +80,7 @@ func Test_ChunkDATA_DATA_LoadDataMode(t *testing.T) {
 
 func Test_ChunkDATA_SetData_Even(t *testing.T) {
 	// --- Given ---
-	ch := DATA(LoadData)
+	ch := DATA(WithLoadData())
 
 	// --- When ---
 	err := ch.SetData([]byte{0, 1, 2, 3})
@@ -93,7 +93,7 @@ func Test_ChunkDATA_SetData_Even(t *testing.T) {
 
 func Test_ChunkDATA_SetData_Odd(t *testing.T) {
 	// --- Given ---
-	ch := DATA(LoadData)
+	ch := DATA(WithLoadData())
 
 	// --- When ---
 	err := ch.SetData([]byte{0, 1, 2})
@@ -106,7 +106,7 @@ func Test_ChunkDATA_SetData_Odd(t *testing.T) {
 
 func Test_ChunkDATA_SetData_SkipDataMode_Error(t *testing.T) {
 	// --- Given ---
-	ch := DATA(SkipData)
+	ch := DATA()
 
 	// --- When ---
 	err := ch.SetData([]byte{0, 1, 2})
@@ -122,7 +122,7 @@ func Test_ChunkDATA_ReadFrom_Even(t *testing.T) {
 	src := dataChunkEven(t)
 	test.Skip4B(t, src) // Skip chunk ID.
 
-	ch := DATA(LoadData)
+	ch := DATA(WithLoadData())
 
 	// --- When ---
 	n, err := ch.ReadFrom(src)
@@ -148,7 +148,7 @@ func Test_ChunkDATA_ReadFrom_Odd(t *testing.T) {
 	src := dataChunkOdd(t)
 	test.Skip4B(t, src) // Skip chunk ID.
 
-	ch := DATA(LoadData)
+	ch := DATA(WithLoadData())
 
 	// --- When ---
 	n, err := ch.ReadFrom(src)
@@ -169,6 +169,20 @@ func Test_ChunkDATA_ReadFrom_Odd(t *testing.T) {
 	assert.True(t, test.IsAllRead(src))
 }
 
+func Test_ChunkDATA_ReadFrom_LimitError(t *testing.T) {
+	// --- Given ---
+	src := dataChunkOdd(t)
+	test.Skip4B(t, src) // Skip chunk ID.
+
+	ch := DATA(WithSizeLimit(15))
+
+	// --- When ---
+	_, err := ch.ReadFrom(src)
+
+	// --- Then ---
+	assert.ErrorIs(t, ErrTooLarge, err)
+}
+
 func Test_ChunkDATA_ReadFrom_Errors(t *testing.T) {
 	// Reading less than 20 bytes should always result in an error.
 	for i := 1; i < 20; i++ {
@@ -177,7 +191,7 @@ func Test_ChunkDATA_ReadFrom_Errors(t *testing.T) {
 		test.Skip4B(t, src) // Skip chunk ID.
 
 		// --- When ---
-		_, err := DATA(LoadData).ReadFrom(io.LimitReader(src, int64(i)))
+		_, err := DATA(WithLoadData()).ReadFrom(io.LimitReader(src, int64(i)))
 
 		// --- Then ---
 		if !assert.Error(t, err) {
@@ -203,7 +217,7 @@ func TestChunkDATA_WriteTo(t *testing.T) {
 			src := tc.ch(t)
 			test.Skip4B(t, src) // Skip chunk ID.
 
-			ch := DATA(LoadData)
+			ch := DATA(WithLoadData())
 			must.Value(ch.ReadFrom(src))
 
 			// --- When ---
@@ -227,7 +241,7 @@ func Test_ChunkDATA_WriteTo_Errors(t *testing.T) {
 		src := dataChunkOdd(t)
 		test.Skip4B(t, src) // Skip chunk ID.
 
-		ch := DATA(LoadData)
+		ch := DATA(WithLoadData())
 		_, err := ch.ReadFrom(src)
 		if assert.NoError(t, err) {
 			t.Logf("error i=%d", i)
@@ -249,7 +263,7 @@ func Test_ChunkDATA_WriteTo_SkipData(t *testing.T) {
 	src := dataChunkOdd(t)
 	test.Skip4B(t, src) // Skip chunk ID.
 
-	ch := DATA(SkipData)
+	ch := DATA()
 	_, err := ch.ReadFrom(src)
 	assert.NoError(t, err)
 
@@ -263,7 +277,7 @@ func Test_ChunkDATA_WriteTo_SkipData(t *testing.T) {
 
 func Test_ChunkDATA_Duration(t *testing.T) {
 	// --- Given ---
-	ch := DATA(SkipData)
+	ch := DATA()
 	ch.size = 88200
 	ch.data = bytes.Repeat([]byte{0}, 88200)
 
@@ -276,7 +290,7 @@ func Test_ChunkDATA_Duration(t *testing.T) {
 
 func Test_ChunkDATA_Reset(t *testing.T) {
 	// --- Given ---
-	ch := DATA(LoadData)
+	ch := DATA(WithLoadData())
 	ch.size = 88200
 	err := ch.SetData(bytes.Repeat([]byte{0}, 88200))
 	assert.NoError(t, err)

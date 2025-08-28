@@ -66,14 +66,23 @@ type ChunkLTXT struct {
 	// the string. The appended padding is not considered in the note
 	// chunk's chunk size field.
 	text []byte
+
+	// Chunk processing options.
+	opts Opts
 }
 
 // LTXTMake is a Maker function for creating ChunkLTXT instances.
-func LTXTMake() Chunk { return LTXT() }
+func LTXTMake(opts ...OptsFn) Maker {
+	return func() Chunk {
+		return LTXT(opts...)
+	}
+}
 
 // LTXT returns new instance of ChunkLTXT.
-func LTXT() *ChunkLTXT {
-	return &ChunkLTXT{}
+func LTXT(opts ...OptsFn) *ChunkLTXT {
+	return &ChunkLTXT{
+		opts: NewOpts(opts...),
+	}
 }
 
 func (ch *ChunkLTXT) ID() uint32     { return IDltxt }
@@ -89,37 +98,34 @@ func (ch *ChunkLTXT) Text() io.Reader {
 }
 
 func (ch *ChunkLTXT) ReadFrom(r io.Reader) (int64, error) {
-	var sum int64
-	if err := binary.Read(r, le, &ch.size); err != nil {
-		return sum, fmt.Errorf(errFmtDecode, linkids(IDINFO, IDltxt), err)
+	cr, size, err := ch.opts.ChunkReader(r)
+	if err != nil {
+		return 0, fmt.Errorf(errFmtDecode, linkids(IDINFO, IDltxt), err)
 	}
-	sum += 4
+	ch.size = size
 
 	if ch.size < LTXTChunkSize {
-		return sum, fmt.Errorf(errFmtDecode, linkids(IDINFO, IDltxt), ErrTooShort)
+		return cr.Count(), fmt.Errorf(errFmtDecode, linkids(IDINFO, IDltxt), ErrTooShort)
 	}
 
-	if err := binary.Read(r, le, &ch.ltxtStatic); err != nil {
-		return sum, fmt.Errorf(errFmtDecode, linkids(IDINFO, IDltxt), err)
+	if err := binary.Read(cr, le, &ch.ltxtStatic); err != nil {
+		return cr.Count(), fmt.Errorf(errFmtDecode, linkids(IDINFO, IDltxt), err)
 	}
-	sum += int64(LTXTChunkSize)
 
 	tl := int(ch.size - LTXTChunkSize) // Subtract ltxtStatic fields size.
 	ch.text = grow(ch.text, tl)
-	in, err := io.ReadFull(r, ch.text)
-	sum += int64(in)
+	_, err = io.ReadFull(cr, ch.text)
 	if err != nil {
-		return sum, fmt.Errorf(errFmtDecode, linkids(IDINFO, IDltxt), err)
+		return cr.Count(), fmt.Errorf(errFmtDecode, linkids(IDINFO, IDltxt), err)
 	}
 
 	// If the length of text bytes is odd, it means the padding byte was added
 	// to the end.
-	n, err := ReadPaddingIf(r, ch.size)
-	sum += n
+	_, err = ReadPaddingIf(cr, ch.size)
 	if err != nil {
-		return sum, fmt.Errorf(errFmtDecode, linkids(IDINFO, IDltxt), err)
+		return cr.Count(), fmt.Errorf(errFmtDecode, linkids(IDINFO, IDltxt), err)
 	}
-	return sum, nil
+	return cr.Count(), nil
 }
 
 func (ch *ChunkLTXT) WriteTo(w io.Writer) (int64, error) {

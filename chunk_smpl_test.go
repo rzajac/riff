@@ -310,6 +310,20 @@ func Test_ChunkSMPL_ReadFrom_InvalidSizeError(t *testing.T) {
 	assert.Equal(t, int64(40), n)
 }
 
+func Test_ChunkSMPL_ReadFrom_LimitError(t *testing.T) {
+	// --- Given ---
+	src := smplWithoutLoopsWithData(t)
+	test.Skip4B(t, src) // Skip chunk ID.
+
+	ch := SMPL(WithSizeLimit(39))
+
+	// --- When ---
+	_, err := ch.ReadFrom(src)
+
+	// --- Then ---
+	assert.ErrorIs(t, ErrTooLarge, err)
+}
+
 func Test_ChunkSMPL_Reset(t *testing.T) {
 	// --- Given ---
 	ch := SMPL()

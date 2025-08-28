@@ -124,7 +124,7 @@ func Test_ChunkFMT_FMT(t *testing.T) {
 
 	// --- Then ---
 	assert.Equal(t, IDfmt, ch.ID())
-	assert.Equal(t, uint32(16), ch.Size())
+	assert.Equal(t, uint32(0), ch.Size())
 	assert.Equal(t, uint32(0), ch.Type())
 	assert.False(t, ch.Multi())
 	assert.Nil(t, ch.Chunks())
@@ -202,6 +202,20 @@ func Test_ChunkFMT_ReadFrom_ExtraBytesOdd(t *testing.T) {
 	assert.Equal(t, uint16(16), ch.BitsPerSample)
 	assert.Equal(t, []byte{0, 1, 2}, ch.extra)
 	assert.True(t, test.IsAllRead(src))
+}
+
+func Test_ChunkFMT_ReadFrom_LimitError(t *testing.T) {
+	// --- Given ---
+	src := fmtChunkWithExtraBytesOdd(t)
+	test.Skip4B(t, src) // Skip chunk ID.
+
+	ch := FMT(WithSizeLimit(21))
+
+	// --- When ---
+	_, err := ch.ReadFrom(src)
+
+	// --- Then ---
+	assert.ErrorIs(t, ErrTooLarge, err)
 }
 
 func Test_ChunkFMT_ReadFrom_Errors(t *testing.T) {

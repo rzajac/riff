@@ -31,14 +31,23 @@ type ChunkLABL struct {
 	// the string. The appended padding is not considered in the label
 	// chunk's chunk size field.
 	label []byte
+
+	// Chunk processing options.
+	opts Opts
 }
 
 // LABLMake is a [Maker] function for creating [ChunkLABL] instances.
-func LABLMake() Chunk { return LABL() }
+func LABLMake(opts ...OptsFn) Maker {
+	return func() Chunk {
+		return LABL(opts...)
+	}
+}
 
 // LABL returns a new instance of [ChunkLABL].
-func LABL() *ChunkLABL {
-	return &ChunkLABL{}
+func LABL(opts ...OptsFn) *ChunkLABL {
+	return &ChunkLABL{
+		opts: NewOpts(opts...),
+	}
 }
 
 func (ch *ChunkLABL) ID() uint32     { return IDlabl }
@@ -54,37 +63,34 @@ func (ch *ChunkLABL) Label() io.Reader {
 }
 
 func (ch *ChunkLABL) ReadFrom(r io.Reader) (int64, error) {
-	var sum int64
-	if err := binary.Read(r, le, &ch.size); err != nil {
-		return sum, fmt.Errorf(errFmtDecode, linkids(IDINFO, IDlabl), err)
+	cr, size, err := ch.opts.ChunkReader(r)
+	if err != nil {
+		return 0, fmt.Errorf(errFmtDecode, linkids(IDINFO, IDlabl), err)
 	}
-	sum += 4
+	ch.size = size
 
 	if ch.size < LABLChunkSize {
-		return sum, fmt.Errorf(errFmtDecode, linkids(IDINFO, IDlabl), ErrTooShort)
+		return cr.Count(), fmt.Errorf(errFmtDecode, linkids(IDINFO, IDlabl), ErrTooShort)
 	}
 
-	if err := binary.Read(r, le, &ch.CuePointID); err != nil {
-		return sum, fmt.Errorf(errFmtDecode, linkids(IDINFO, IDlabl), err)
+	if err := binary.Read(cr, le, &ch.CuePointID); err != nil {
+		return cr.Count(), fmt.Errorf(errFmtDecode, linkids(IDINFO, IDlabl), err)
 	}
-	sum += int64(LABLChunkSize)
 
 	ch.label = grow(ch.label, int(ch.size-LABLChunkSize)) // Subtract pid field size.
-	in, err := io.ReadFull(r, ch.label)
-	sum += int64(in)
+	_, err = io.ReadFull(cr, ch.label)
 	if err != nil {
-		return sum, fmt.Errorf(errFmtDecode, linkids(IDINFO, IDlabl), err)
+		return cr.Count(), fmt.Errorf(errFmtDecode, linkids(IDINFO, IDlabl), err)
 	}
 
 	// If the length of label bytes is odd, it means the padding byte was added
 	// to the end.
-	n, err := ReadPaddingIf(r, ch.size)
-	sum += n
+	_, err = ReadPaddingIf(cr, ch.size)
 	if err != nil {
-		return sum, fmt.Errorf(errFmtDecode, linkids(IDINFO, IDlabl), err)
+		return cr.Count(), fmt.Errorf(errFmtDecode, linkids(IDINFO, IDlabl), err)
 	}
 
-	return sum, nil
+	return cr.Count(), nil
 }
 
 func (ch *ChunkLABL) WriteTo(w io.Writer) (int64, error) {

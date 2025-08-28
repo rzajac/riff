@@ -120,6 +120,20 @@ func Test_ChunkLABL_ReadFrom_TooShortError(t *testing.T) {
 	assert.Equal(t, int64(4), n)
 }
 
+func Test_ChunkLABL_ReadFrom_LimitError(t *testing.T) {
+	// --- Given ---
+	src := lablChunkTextLenEven(t)
+	test.Skip4B(t, src) // Skip chunk ID.
+
+	ch := LABL(WithSizeLimit(7))
+
+	// --- When ---
+	_, err := ch.ReadFrom(src)
+
+	// --- Then ---
+	assert.ErrorIs(t, ErrTooLarge, err)
+}
+
 func Test_ChunkLABL_WriteTo(t *testing.T) {
 	tt := []struct {
 		testN string

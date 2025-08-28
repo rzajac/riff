@@ -10,7 +10,7 @@ import (
 
 func Test_Chunks_First(t *testing.T) {
 	// --- Given ---
-	rif := New(SkipData)
+	rif := New()
 	_, err := rif.ReadFrom(must.Value(os.Open("testdata/bwf.wav")))
 	assert.NoError(t, err)
 	chs := rif.Chunks()
@@ -25,7 +25,7 @@ func Test_Chunks_First(t *testing.T) {
 
 func Test_Chunks_First_NotPresent(t *testing.T) {
 	// --- Given ---
-	rif := New(SkipData)
+	rif := New()
 	_, err := rif.ReadFrom(must.Value(os.Open("testdata/bwf.wav")))
 	assert.NoError(t, err)
 	chs := rif.Chunks()
@@ -39,7 +39,7 @@ func Test_Chunks_First_NotPresent(t *testing.T) {
 
 func Test_Chunks_Size(t *testing.T) {
 	// --- Given ---
-	rif := New(SkipData)
+	rif := New()
 	_, err := rif.ReadFrom(must.Value(os.Open("testdata/bwf.wav")))
 	assert.NoError(t, err)
 	chs := rif.Chunks()
@@ -54,7 +54,7 @@ func Test_Chunks_Size(t *testing.T) {
 
 func Test_Chunks_IDs(t *testing.T) {
 	// --- Given ---
-	rif := New(SkipData)
+	rif := New()
 	_, err := rif.ReadFrom(must.Value(os.Open("testdata/bwf.wav")))
 	assert.NoError(t, err)
 	chs := rif.Chunks()
@@ -84,7 +84,7 @@ func Test_Chunks_IDs(t *testing.T) {
 
 func Test_Chunks_Count(t *testing.T) {
 	// --- Given ---
-	rif := New(SkipData)
+	rif := New()
 	_, err := rif.ReadFrom(must.Value(os.Open("testdata/bwf.wav")))
 	assert.NoError(t, err)
 	chs := rif.Chunks()
@@ -99,7 +99,7 @@ func Test_Chunks_Count(t *testing.T) {
 func Test_Chunks_Remove(t *testing.T) {
 	t.Run("ok", func(t *testing.T) {
 		// --- Given ---
-		rif := New(SkipData)
+		rif := New()
 		_, err := rif.ReadFrom(must.Value(os.Open("testdata/bwf.wav")))
 		assert.NoError(t, err)
 
@@ -115,7 +115,7 @@ func Test_Chunks_Remove(t *testing.T) {
 
 	t.Run("right order", func(t *testing.T) {
 		// --- Given ---
-		rif := New(SkipData)
+		rif := New()
 		_, _ = rif.ReadFrom(must.Value(os.Open("testdata/bwf.wav")))
 		chsIDs := rif.Chunks().IDs()
 
@@ -132,7 +132,7 @@ func Test_Chunks_Remove(t *testing.T) {
 
 	t.Run("key does not exist", func(t *testing.T) {
 		// --- Given ---
-		rif := New(SkipData)
+		rif := New()
 		_, _ = rif.ReadFrom(must.Value(os.Open("testdata/bwf.wav")))
 		chsIDs := rif.Chunks().IDs()
 		id := uint32(1)

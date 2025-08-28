@@ -2,7 +2,6 @@ package riff
 
 import (
 	"bytes"
-	"encoding/binary"
 	"fmt"
 	"io"
 	"time"
@@ -19,6 +18,9 @@ type ChunkDATA struct {
 
 	// Buffer data is read to.
 	data []byte
+
+	// Chunk processing options.
+	opts Opts
 }
 
 func (ch *ChunkDATA) ID() uint32     { return IDdata }
@@ -29,24 +31,26 @@ func (ch *ChunkDATA) Chunks() Chunks { return nil }
 func (ch *ChunkDATA) Raw() bool      { return false }
 
 // DATAMake returns Maker function for ChunkDATA instances.
-func DATAMake(load bool) Maker {
+func DATAMake(opts ...OptsFn) Maker {
 	return func() Chunk {
-		return DATA(load)
+		return DATA(opts...)
 	}
 }
 
 // DATA returns new instance of ChunkDATA. If load is false
 // the chunk data will not be loaded into memory. It's used to reduce
 // memory footprint of the decoder if only metadata is of interest.
-func DATA(load bool) *ChunkDATA {
-	ch := &ChunkDATA{}
-	if load {
+func DATA(opts ...OptsFn) *ChunkDATA {
+	ch := &ChunkDATA{
+		opts: NewOpts(opts...),
+	}
+	if ch.opts.LoadData() {
 		ch.data = make([]byte, 0, 1<<15)
 	}
 	return ch
 }
 
-// Data returns reader for data. If in [SkipData] mode, an empty reader is
+// Data returns reader for data. If in SkipData mode, an empty reader is
 // returned.
 func (ch *ChunkDATA) Data() io.Reader {
 	return bytes.NewReader(ch.data)
@@ -54,7 +58,7 @@ func (ch *ChunkDATA) Data() io.Reader {
 
 // SetData set data bytes. If will return ErrSkipDataMode if in SkipData mode.
 func (ch *ChunkDATA) SetData(data []byte) error {
-	if ch.data == nil {
+	if !ch.opts.LoadData() {
 		return ErrSkipDataMode
 	}
 	l := len(data)
@@ -72,39 +76,36 @@ func (ch *ChunkDATA) Duration(abr uint32) time.Duration {
 }
 
 func (ch *ChunkDATA) ReadFrom(r io.Reader) (int64, error) {
-	var sum int64
-	if err := binary.Read(r, le, &ch.size); err != nil {
-		return sum, fmt.Errorf(errFmtDecode, Uint32(IDdata), err)
+	cr, size, err := ch.opts.ChunkReader(r)
+	if err != nil {
+		return 0, fmt.Errorf(errFmtDecode, Uint32(IDdata), err)
 	}
-	sum += 4
+	ch.size = size
 
-	if ch.data == nil {
+	if !ch.opts.LoadData() {
 		rs := RealSize(ch.size) // Skip padding byte if present.
-		if err := SkipN(r, rs); err != nil {
-			return sum, fmt.Errorf(errFmtDecode, Uint32(IDdata), err)
+		if err := cr.SkipN(rs); err != nil {
+			return cr.Count(), fmt.Errorf(errFmtDecode, Uint32(IDdata), err)
 		}
-		sum += int64(rs)
-		return sum, nil
+		return cr.Count(), nil
 	}
 
 	ch.data = grow(ch.data, int(ch.size))
-	in, err := io.ReadFull(r, ch.data)
-	sum += int64(in)
+	_, err = io.ReadFull(cr, ch.data)
 	if err != nil {
-		return sum, fmt.Errorf(errFmtDecode, Uint32(IDdata), err)
+		return cr.Count(), fmt.Errorf(errFmtDecode, Uint32(IDdata), err)
 	}
 
-	n, err := ReadPaddingIf(r, ch.size)
-	sum += n
+	_, err = ReadPaddingIf(cr, ch.size)
 	if err != nil {
-		return sum, fmt.Errorf(errFmtDecode, Uint32(IDdata), err)
+		return cr.Count(), fmt.Errorf(errFmtDecode, Uint32(IDdata), err)
 	}
 
-	return sum, nil
+	return cr.Count(), nil
 }
 
 func (ch *ChunkDATA) WriteTo(w io.Writer) (int64, error) {
-	if ch.data == nil {
+	if !ch.opts.LoadData() {
 		return 0, ErrSkipDataMode
 	}
 

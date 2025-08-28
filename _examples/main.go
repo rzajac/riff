@@ -39,7 +39,7 @@ func main() {
 // rawChunkPrint prints fmt chunk as slice of bytes.
 func rawChunkPrint(fil *os.File) error {
 	// Don't register any decoders and load all the data.
-	rif := riff.New(riff.LoadData)
+	rif := riff.New(riff.WithLoadData())
 
 	// Decode chunks.
 	if _, err := rif.ReadFrom(fil); err != nil {
@@ -78,7 +78,7 @@ func rawChunkPrint(fil *os.File) error {
 // fmtChunkPrint prints values defined in fmt chunk.
 func fmtChunkPrint(fil *os.File) error {
 	// Load only metadata (default).
-	rif := riff.New(riff.SkipData)
+	rif := riff.New()
 
 	// Decode chunks.
 	if _, err := rif.ReadFrom(fil); err != nil {
@@ -126,7 +126,7 @@ func fmtChunkPrint(fil *os.File) error {
 
 // dataChunkPrint set data chunk.
 func dataChunkPrint(fil *os.File) error {
-	rif := riff.New(riff.LoadData)
+	rif := riff.New(riff.WithLoadData())
 
 	if _, err := rif.ReadFrom(fil); err != nil {
 		return err
@@ -164,15 +164,15 @@ func dataChunkPrint(fil *os.File) error {
 
 func registerCustom(fil *os.File) error {
 	// Create registry with raw parsers skipping data.
-	reg := riff.NewRegistry(riff.RAWCMake(riff.SkipData))
+	reg := riff.NewRegistry(riff.RAWCMake())
 
 	// Register parsers for chunks we are interested in.
 
 	// Parse fmt and LIST chunk(s).
-	reg.Register(riff.IDfmt, riff.FMTMake)
-	reg.Register(riff.IDLIST, riff.LISTMake(riff.LoadData, reg))
+	reg.Register(riff.IDfmt, riff.FMTMake())
+	reg.Register(riff.IDLIST, riff.LISTMake(reg, riff.WithLoadData()))
 	// Skip reading data in data chunk.
-	reg.Register(riff.IDdata, riff.DATAMake(riff.SkipData))
+	reg.Register(riff.IDdata, riff.DATAMake())
 
 	// Not registered chunks will be decoded by RAWChunk.
 
