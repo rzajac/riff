@@ -142,6 +142,20 @@ func Test_ChunkLTXT_ReadFrom_TooShortError(t *testing.T) {
 	assert.Equal(t, int64(4), n)
 }
 
+func Test_ChunkLTXT_ReadFrom_LimitError(t *testing.T) {
+	// --- Given ---
+	src := ltxtChunkTextLenEven(t)
+	test.Skip4B(t, src) // Skip chunk ID.
+
+	ch := LTXT(WithSizeLimit(23))
+
+	// --- When ---
+	_, err := ch.ReadFrom(src)
+
+	// --- Then ---
+	assert.ErrorIs(t, ErrTooLarge, err)
+}
+
 func Test_ChunkLTXT_WriteTo(t *testing.T) {
 	tt := []struct {
 		testN string

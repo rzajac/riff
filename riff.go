@@ -46,50 +46,35 @@ type RIFF struct {
 	// Registered chunk decoders.
 	reg *Registry
 
-	// Controls how chunks are processed. If set to false, then only the
-	// metadata about the chunks are read the rest is skipped. This improves
-	// performance in cases when a user is only interested in metadata and
-	// isn't going to modify or write the RIFF file.
-	// It's up to the chunk decoder to decide what is considered data vs.
-	// metadata.
-	// By default, it is set to false.
-	load bool
+	// Main chunk processing options.
+	opts Opts
 }
-
-const (
-	// LoadData is a [RIFF] constructor option instructing decoders to load
-	// chunk's metadata and data.
-	LoadData bool = true
-
-	// SkipData is a [RIFF] constructor option instructing decoders to skip
-	// chunk's data and load only metadata.
-	SkipData bool = false
-)
 
 // New returns new instance of Riff with all "out-of-the-box" chunk decoders
 // registered.
-func New(load bool) *RIFF {
-	reg := NewRegistry(RAWCMake(load))
+func New(opts ...OptsFn) *RIFF {
+	reg := NewRegistry(RAWCMake(opts...))
 
 	// Register "out of the box" chunk decoders.
-	reg.Register(IDfmt, FMTMake)
-	reg.Register(IDdata, DATAMake(load))
-	reg.Register(IDLIST, LISTMake(load, reg))
-	reg.Register(IDsmpl, SMPLMake)
+	reg.Register(IDfmt, FMTMake(opts...))
+	reg.Register(IDdata, DATAMake(opts...))
+	reg.Register(IDLIST, LISTMake(reg, opts...))
+	reg.Register(IDsmpl, SMPLMake(opts...))
 
-	return Bare(reg)
+	return Bare(reg, opts...)
 }
 
 // Bare returns a new instance of [RIFF] without any chunk decoders registered.
 // If reg is set to nil, it will be created with the default raw chunk decoder
 // (ChunkRAWC) set to skip data.
-func Bare(reg *Registry) *RIFF {
+func Bare(reg *Registry, opts ...OptsFn) *RIFF {
 	if reg == nil {
-		reg = NewRegistry(RAWCMake(SkipData))
+		reg = NewRegistry(RAWCMake())
 	}
 	rif := &RIFF{
 		chunks: make([]Chunk, 0, 4),
 		reg:    reg,
+		opts:   NewOpts(opts...),
 	}
 	return rif
 }
@@ -98,10 +83,10 @@ func Bare(reg *Registry) *RIFF {
 // This method allows you to create a copy of the original RIFF with
 // modifications.
 func Compose(chs Chunks) *RIFF {
-	reg := Bare(nil)
-	reg.Modify(chs)
+	rif := Bare(nil)
+	rif.Modify(chs)
 
-	return reg
+	return rif
 }
 
 func (rif *RIFF) ID() uint32     { return IDRIFF }
@@ -122,52 +107,61 @@ func (rif *RIFF) ReadFrom(r io.Reader) (int64, error) {
 	rif.Reset()
 
 	var err error
-	var sum int64
 	var id uint32
 
 	if err = ReadChunkID(r, &id); err != nil {
 		return 0, err
 	}
-	sum += 4
 
 	if id != IDRIFF {
-		return sum, ErrNotRIFF
+		return 4, ErrNotRIFF
 	}
 
-	if rif.size, err = ReadChunkSize(r); err != nil {
-		return sum, err
+	cr, size, err := rif.opts.ChunkReader(r)
+	if err != nil {
+		return 4, fmt.Errorf(errFmtDecode, Uint32(IDRIFF), err)
 	}
-	sum += 4
+	cr.setOffset(int(cr.Count()) + 4) // IDRIFF was already read.
 
-	if err = binary.Read(r, be, &rif.riffType); err != nil {
-		return sum, fmt.Errorf(errFmtDecode, Uint32(IDRIFF), err)
+	// Main chunk RIFF size should never be odd. Since it's a small infraction,
+	// we can simply round it up.
+	rif.size = RealSize(size)
+
+	if err = binary.Read(cr, be, &rif.riffType); err != nil {
+		return cr.Count(), fmt.Errorf(errFmtDecode, Uint32(IDRIFF), err)
 	}
-	sum += 4
 
-	var n int64
 	for {
-		if err = ReadChunkID(r, &id); err != nil {
+		if err = ReadChunkID(cr, &id); err != nil {
+			if !errors.Is(err, io.EOF) {
+				return cr.Count(), fmt.Errorf(errFmtReadingRIFF, cr.Count(), err)
+			}
 			break
 		}
-		sum += 4
 
-		n, err = rif.decodeChunk(id, r)
-		sum += n
+		_, err = rif.decodeChunk(id, cr)
 		if err != nil {
-			break
+			return cr.Count(), fmt.Errorf(errFmtReadingRIFF, cr.Count(), err)
 		}
 	}
+	// EOF reached.
+	readSize := uint32(cr.Count() - 8)
 
-	// Size needs to be corrected.
-	if errors.Is(err, io.EOF) && rif.size != uint32(sum-8) {
-		rif.size = uint32(sum - 8)
+	if !rif.opts.IgnoreDeclaredSize() && rif.size > readSize {
+		return cr.Count(), fmt.Errorf(
+			"RIFF declared %d bytes, decoder read %d bytes: %w",
+			rif.size,
+			readSize,
+			io.ErrUnexpectedEOF,
+		)
 	}
 
-	if errors.Is(err, io.EOF) {
-		return sum, nil
+	if rif.opts.IgnoreDeclaredSize() && rif.size != readSize {
+		// Size needs to be corrected.
+		rif.size = readSize
 	}
 
-	return sum, fmt.Errorf("error reading chunk ID: %w", err)
+	return cr.Count(), nil
 }
 
 func (rif *RIFF) WriteTo(w io.Writer) (int64, error) {

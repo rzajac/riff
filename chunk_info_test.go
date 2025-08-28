@@ -100,6 +100,20 @@ func Test_ChunkINFO_ReadFrom_TextLenOdd(t *testing.T) {
 	assert.True(t, test.IsAllRead(src))
 }
 
+func Test_ChunkINFO_ReadFrom_LimitError(t *testing.T) {
+	// --- Given ---
+	src := infoChunkTextLenOdd(t)
+	test.Skip4B(t, src) // Skip chunk ID.
+
+	ch := INFO(LabIART, WithSizeLimit(3))
+
+	// --- When ---
+	_, err := ch.ReadFrom(src)
+
+	// --- Then ---
+	assert.ErrorIs(t, ErrTooLarge, err)
+}
+
 func Test_ChunkINFO_ReadFrom_Errors(t *testing.T) {
 	// Reading less than 8 bytes should always result in an error.
 	for i := 1; i < 8; i++ {

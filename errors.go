@@ -13,11 +13,14 @@ var (
 	// defined length.
 	ErrTooShort = errors.New("length too short")
 
+	// ErrTooLarge is returned when a chunk size is grater than set maximum.
+	ErrTooLarge = errors.New("size too large")
+
 	// ErrChunkSizeMismatch is returned when a chunk size mismatch with its
 	// content.
 	ErrChunkSizeMismatch = errors.New("chunk size mismatch")
 
-	// ErrSkipDataMode is returned when the decoder in [SkipData] mode
+	// ErrSkipDataMode is returned when the decoder in SkipData mode
 	// is used in write context (e.x. calling WriteTo method).
 	ErrSkipDataMode = errors.New("decoder in meta only mode used in write context")
 )
@@ -29,4 +32,7 @@ const (
 
 	// errFmtEncode format string for chunk encoding errors.
 	errFmtEncode = "error encoding %s chunk: %w"
+
+	// errFmtReadingRIFF format string for main RIFF chunk reading errors.
+	errFmtReadingRIFF = "error reading RIFF offset %d: %w"
 )

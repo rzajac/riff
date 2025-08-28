@@ -61,10 +61,10 @@ func listChunkType_unknown(t *testing.T) io.Reader {
 
 func Test_ChunkLIST_LIST(t *testing.T) {
 	// --- Given ---
-	reg := NewRegistry(RAWCMake(LoadData))
+	reg := NewRegistry(RAWCMake(WithLoadData()))
 
 	// --- When ---
-	ch := LIST(LoadData, reg)
+	ch := LIST(reg, WithLoadData())
 
 	// --- Then ---
 	assert.Equal(t, IDLIST, ch.ID())
@@ -77,13 +77,13 @@ func Test_ChunkLIST_LIST(t *testing.T) {
 
 func Test_ChunkLIST_Type_INFO(t *testing.T) {
 	// --- Given ---
-	reg := NewRegistry(RAWCMake(LoadData))
+	reg := NewRegistry(RAWCMake(WithLoadData()))
 
 	src := listChunkType_INFO(t)
 	test.Skip4B(t, src) // Skip chunk ID.
 
 	// --- When ---
-	ch := LIST(LoadData, reg)
+	ch := LIST(reg, WithLoadData())
 	n, err := ch.ReadFrom(src)
 
 	// --- Then ---
@@ -99,13 +99,13 @@ func Test_ChunkLIST_Type_INFO(t *testing.T) {
 
 func Test_ChunkLIST_Type_adtl(t *testing.T) {
 	// --- Given ---
-	reg := NewRegistry(RAWCMake(LoadData))
+	reg := NewRegistry(RAWCMake(WithLoadData()))
 
 	src := listChunkType_adtl(t)
 	test.Skip4B(t, src) // Skip chunk ID.
 
 	// --- When ---
-	ch := LIST(LoadData, reg)
+	ch := LIST(reg, WithLoadData())
 	n, err := ch.ReadFrom(src)
 
 	// --- Then ---
@@ -125,13 +125,13 @@ func Test_ChunkLIST_Type_adtl(t *testing.T) {
 
 func Test_ChunkLIST_Type_unknown(t *testing.T) {
 	// --- Given ---
-	reg := NewRegistry(RAWCMake(LoadData))
+	reg := NewRegistry(RAWCMake(WithLoadData()))
 
 	src := listChunkType_unknown(t)
 	test.Skip4B(t, src) // Skip chunk ID.
 
 	// --- When ---
-	ch := LIST(LoadData, reg)
+	ch := LIST(reg, WithLoadData())
 	n, err := ch.ReadFrom(src)
 
 	// --- Then ---
@@ -145,16 +145,31 @@ func Test_ChunkLIST_Type_unknown(t *testing.T) {
 	assert.Equal(t, LabIART, sub.ID())
 }
 
+func Test_ChunkLIST_ReadFrom_LimitError(t *testing.T) {
+	// --- Given ---
+	reg := NewRegistry(RAWCMake(WithLoadData()))
+
+	src := listChunkType_adtl(t)
+	test.Skip4B(t, src) // Skip chunk ID.
+
+	// --- When ---
+	ch := LIST(reg, WithLoadData(), WithSizeLimit(51))
+	_, err := ch.ReadFrom(src)
+
+	// --- Then ---
+	assert.ErrorIs(t, ErrTooLarge, err)
+}
+
 func Test_ChunkLIST_ReadFrom_Errors(t *testing.T) {
 	// Reading less than 20 bytes should always result in an error.
 	for i := 1; i < 20; i++ {
 		// --- Given ---
-		reg := NewRegistry(RAWCMake(LoadData))
+		reg := NewRegistry(RAWCMake(WithLoadData()))
 		src := listChunkType_INFO(t)
 		test.Skip4B(t, src) // Skip chunk ID.
 
 		// --- When ---
-		_, err := LIST(LoadData, reg).ReadFrom(io.LimitReader(src, int64(i)))
+		_, err := LIST(reg, WithLoadData()).ReadFrom(io.LimitReader(src, int64(i)))
 
 		// --- Then ---
 		if !assert.Error(t, err) {
@@ -165,12 +180,12 @@ func Test_ChunkLIST_ReadFrom_Errors(t *testing.T) {
 
 func Test_ChunkLIST_ReadFrom_TooShortError(t *testing.T) {
 	// --- Given ---
-	reg := NewRegistry(RAWCMake(LoadData))
+	reg := NewRegistry(RAWCMake(WithLoadData()))
 	src := &bytes.Buffer{}
 	test.WriteUint32LE(t, src, 3)
 
 	// --- When ---
-	ch := LIST(LoadData, reg)
+	ch := LIST(reg, WithLoadData())
 	n, err := ch.ReadFrom(src)
 
 	// --- Then ---
@@ -193,12 +208,12 @@ func Test_ChunkLIST_WriteTo(t *testing.T) {
 	for _, tc := range tt {
 		t.Run(tc.testN, func(t *testing.T) {
 			// --- Given ---
-			reg := NewRegistry(RAWCMake(LoadData))
+			reg := NewRegistry(RAWCMake(WithLoadData()))
 
 			src := tc.ch(t)
 			test.Skip4B(t, src) // Skip chunk ID.
 
-			ch := LIST(LoadData, reg)
+			ch := LIST(reg, WithLoadData())
 			_, err := ch.ReadFrom(src)
 			assert.NoError(t, err)
 
@@ -220,12 +235,12 @@ func Test_ChunkLIST_WriteTo_Errors(t *testing.T) {
 	// Writing less than 60 bytes should always result in an error.
 	for i := 60; i > 0; i-- {
 		// --- Given ---
-		reg := NewRegistry(RAWCMake(LoadData))
+		reg := NewRegistry(RAWCMake(WithLoadData()))
 
 		src := listChunkType_adtl(t)
 		test.Skip4B(t, src) // Skip chunk ID.
 
-		ch := LIST(LoadData, reg)
+		ch := LIST(reg, WithLoadData())
 		_, err := ch.ReadFrom(src)
 		if !assert.NoError(t, err) {
 			t.Logf("errro i=%d", i)
@@ -243,12 +258,12 @@ func Test_ChunkLIST_WriteTo_Errors(t *testing.T) {
 }
 
 func Test_ChunkLIST_Reset(t *testing.T) {
-	reg := NewRegistry(RAWCMake(LoadData))
+	reg := NewRegistry(RAWCMake(WithLoadData()))
 
 	src := listChunkType_INFO(t)
 	test.Skip4B(t, src) // Skip chunk ID.
 
-	ch := LIST(LoadData, reg)
+	ch := LIST(reg, WithLoadData())
 	_, err := ch.ReadFrom(src)
 	assert.NoError(t, err)
 
@@ -264,12 +279,12 @@ func Test_ChunkLIST_Reset(t *testing.T) {
 func Test_ChunkLIST_Modify(t *testing.T) {
 	t.Run("ok", func(t *testing.T) {
 		// --- Given ---
-		reg := NewRegistry(RAWCMake(LoadData))
+		reg := NewRegistry(RAWCMake(WithLoadData()))
 
 		src := listChunkType_adtl(t)
 		test.Skip4B(t, src) // Skip chunk ID.
 
-		ch := LIST(LoadData, reg)
+		ch := LIST(reg, WithLoadData())
 		_, _ = ch.ReadFrom(src)
 
 		size := ch.Size()

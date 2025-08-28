@@ -118,14 +118,23 @@ type ChunkSMPL struct {
 
 	// Optional sampler specific data.
 	sampleData []byte
+
+	// Chunk processing options.
+	opts Opts
 }
 
 // SMPLMake is a [Maker] function for creating [ChunkSMPL] instances.
-func SMPLMake() Chunk { return SMPL() }
+func SMPLMake(opts ...OptsFn) Maker {
+	return func() Chunk {
+		return SMPL(opts...)
+	}
+}
 
 // SMPL returns a new instance of [ChunkSMPL].
-func SMPL() *ChunkSMPL {
-	return &ChunkSMPL{}
+func SMPL(opts ...OptsFn) *ChunkSMPL {
+	return &ChunkSMPL{
+		opts: NewOpts(opts...),
+	}
 }
 
 func (ch *ChunkSMPL) ID() uint32     { return IDsmpl }
@@ -141,51 +150,47 @@ func (ch *ChunkSMPL) SamplerData() io.Reader {
 }
 
 func (ch *ChunkSMPL) ReadFrom(r io.Reader) (int64, error) {
-	var sum int64
-	if err := binary.Read(r, le, &ch.size); err != nil {
-		return sum, fmt.Errorf(errFmtDecode, Uint32(IDsmpl), err)
+	cr, size, err := ch.opts.ChunkReader(r)
+	if err != nil {
+		return 0, fmt.Errorf(errFmtDecode, Uint32(IDsmpl), err)
 	}
-	sum += 4
+	ch.size = size
 
 	if ch.size < SMPLChunkSize {
-		return sum, fmt.Errorf(errFmtDecode, Uint32(IDsmpl), ErrTooShort)
+		return cr.Count(), fmt.Errorf(errFmtDecode, Uint32(IDsmpl), ErrTooShort)
 	}
 
-	if err := binary.Read(r, le, &ch.smplStatic); err != nil {
-		return sum, fmt.Errorf(errFmtDecode, Uint32(IDsmpl), err)
+	if err := binary.Read(cr, le, &ch.smplStatic); err != nil {
+		return cr.Count(), fmt.Errorf(errFmtDecode, Uint32(IDsmpl), err)
 	}
-	sum += int64(SMPLChunkSize)
 
 	// We trust size more than SamplerDataCnt.
 	extra := int(ch.size) - int(SMPLChunkSize) - int(ch.SampleLoopCnt*SampleLoopCntSize)
 	if extra < 0 {
-		return sum, fmt.Errorf(errFmtDecode, Uint32(IDsmpl), ErrChunkSizeMismatch)
+		return cr.Count(), fmt.Errorf(errFmtDecode, Uint32(IDsmpl), ErrChunkSizeMismatch)
 	}
 
 	for i := 0; i < int(ch.SampleLoopCnt); i++ {
 		loop := sampleLoopPool.Get().(*SampleLoop) // nolint: forcetypeassert
 		loop.Reset()
-		if err := binary.Read(r, le, loop); err != nil {
+		if err := binary.Read(cr, le, loop); err != nil {
 			return 0, fmt.Errorf(errFmtDecode, Uint32(IDsmpl), err)
 		}
 		ch.SampleLoops = append(ch.SampleLoops, loop)
-		sum += int64(SampleLoopCntSize)
 	}
 
-	ch.sampleData = grow(ch.sampleData, int(extra))
-	in, err := io.ReadFull(r, ch.sampleData)
-	sum += int64(in)
+	ch.sampleData = grow(ch.sampleData, extra)
+	_, err = io.ReadFull(cr, ch.sampleData)
 	if err != nil {
-		return sum, fmt.Errorf(errFmtDecode, Uint32(IDdata), err)
+		return cr.Count(), fmt.Errorf(errFmtDecode, Uint32(IDdata), err)
 	}
 
-	n, err := ReadPaddingIf(r, ch.size)
-	sum += n
+	_, err = ReadPaddingIf(cr, ch.size)
 	if err != nil {
-		return sum, fmt.Errorf(errFmtDecode, Uint32(IDsmpl), err)
+		return cr.Count(), fmt.Errorf(errFmtDecode, Uint32(IDsmpl), err)
 	}
 
-	return sum, nil
+	return cr.Count(), nil
 }
 
 func (ch *ChunkSMPL) WriteTo(w io.Writer) (int64, error) {
