@@ -36,22 +36,22 @@ type ChunkLIST struct {
 	// Registered chunk decoders.
 	reg *Registry
 
-	// When set to false decoder will try to skip reading the data.
-	load bool
+	// Chunk processing options.
+	opts Opts
 }
 
 // LISTMake returns [Maker] function for creating [ChunkLIST] instances.
-func LISTMake(load bool, reg *Registry) Maker {
+func LISTMake(reg *Registry, opts ...OptsFn) Maker {
 	return func() Chunk {
-		return LIST(load, reg)
+		return LIST(reg, opts...)
 	}
 }
 
 // LIST returns a new instance of [ChunkLIST].
-func LIST(load bool, reg *Registry) *ChunkLIST {
+func LIST(reg *Registry, opts ...OptsFn) *ChunkLIST {
 	ch := &ChunkLIST{
-		load: load,
 		reg:  reg,
+		opts: NewOpts(opts...),
 	}
 	return ch
 }
@@ -64,48 +64,42 @@ func (ch *ChunkLIST) Chunks() Chunks { return ch.chunks }
 func (ch *ChunkLIST) Raw() bool      { return false }
 
 func (ch *ChunkLIST) ReadFrom(r io.Reader) (int64, error) {
-	var sum int64
-
-	if err := binary.Read(r, le, &ch.size); err != nil {
-		return sum, fmt.Errorf(errFmtDecode, Uint32(IDLIST), err)
+	cr, size, err := ch.opts.ChunkReader(r)
+	if err != nil {
+		return 0, fmt.Errorf(errFmtDecode, Uint32(IDLIST), err)
 	}
-	sum += 4
+	ch.size = size
 
 	if ch.size < ListTypeSize {
-		return sum, fmt.Errorf(errFmtDecode, Uint32(IDLIST), ErrTooShort)
+		return cr.Count(), fmt.Errorf(errFmtDecode, Uint32(IDLIST), ErrTooShort)
 	}
 
-	if err := binary.Read(r, be, &ch.ListType); err != nil {
-		return sum, fmt.Errorf(errFmtDecode, Uint32(IDLIST), err)
+	if err := binary.Read(cr, be, &ch.ListType); err != nil {
+		return cr.Count(), fmt.Errorf(errFmtDecode, Uint32(IDLIST), err)
 	}
-	sum += int64(ListTypeSize)
 
 	var mkr IDMaker
 	switch ch.ListType {
 	case IDINFO:
-		mkr = INFOMake(ch.load)
+		mkr = INFOMake(WithOpts(ch.opts))
 	case IDadtl:
-		ch.reg.Register(IDlabl, LABLMake)
-		ch.reg.Register(IDltxt, LTXTMake)
-		mkr = RAWCMake(ch.load)
+		ch.reg.Register(IDlabl, LABLMake(WithOpts(ch.opts)))
+		ch.reg.Register(IDltxt, LTXTMake(WithOpts(ch.opts)))
+		mkr = RAWCMake(WithOpts(ch.opts))
 
 	default:
-		mkr = RAWCMake(ch.load)
+		mkr = RAWCMake(WithOpts(ch.opts))
 	}
 
-	var n int64
-	var id uint32
-	var err error
-
 	for {
-		if sum-4 >= int64(ch.size) {
-			return sum, fmt.Errorf("invalid LIST chunk")
+		if cr.Count()-4 >= int64(ch.size) {
+			return cr.Count(), fmt.Errorf(errFmtDecode, linkids(IDLIST, ch.ListType), ErrChunkSizeMismatch)
 		}
 
-		if err = ReadChunkID(r, &id); err != nil {
-			return sum, err
+		var id uint32
+		if err = ReadChunkID(cr, &id); err != nil {
+			return cr.Count(), fmt.Errorf(errFmtDecode, linkids(IDLIST, ch.ListType), err)
 		}
-		sum += 4
 
 		dec := ch.reg.GetNoRaw(id)
 		if dec == nil {
@@ -113,30 +107,23 @@ func (ch *ChunkLIST) ReadFrom(r io.Reader) (int64, error) {
 		}
 		dec.Reset()
 
-		n, err = dec.ReadFrom(r)
-		sum += n
+		_, err = dec.ReadFrom(cr)
 		if err != nil {
-			return sum, fmt.Errorf(errFmtDecode, linkids(IDLIST, id), err)
+			return cr.Count(), fmt.Errorf(errFmtDecode, linkids(IDLIST, id), err)
 		}
 		ch.chunks = append(ch.chunks, dec)
 
 		// Break the loop if we read all bytes declared in size.
-		if sum-4 == int64(ch.size) {
+		if cr.Count()-4 == int64(ch.size) {
 			break
 		}
 	}
 
-	n, err = ReadPaddingIf(r, ch.size)
-	sum += n
-	if err != nil {
-		return sum, fmt.Errorf(errFmtDecode, linkids(IDLIST, ch.ListType), err)
-	}
-
-	return sum, nil
+	return cr.Count(), nil
 }
 
 func (ch *ChunkLIST) WriteTo(w io.Writer) (int64, error) {
-	if ch.load == SkipData {
+	if !ch.opts.LoadData() {
 		return 0, ErrSkipDataMode
 	}
 

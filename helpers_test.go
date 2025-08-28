@@ -5,11 +5,9 @@ import (
 	"io"
 	"testing"
 
-	"github.com/ctx42/memfs/pkg/memfs"
 	"github.com/ctx42/testing/pkg/assert"
 	"github.com/ctx42/testing/pkg/kit/iokit"
 	"github.com/ctx42/testing/pkg/mock"
-	"github.com/ctx42/testing/pkg/must"
 )
 
 func Test_StrToID(t *testing.T) {
@@ -90,114 +88,6 @@ func Test_ReadChunkID_Error(t *testing.T) {
 	// --- Then ---
 	assert.ErrorIs(t, err, iokit.ErrRead)
 	assert.Equal(t, uint32(0), id)
-}
-
-func Test_ReadChunkSize(t *testing.T) {
-	// --- Given ---
-	src := bytes.NewReader([]byte{0x10, 0x00, 0x00, 0x00})
-
-	// --- When ---
-	size, err := ReadChunkSize(src)
-
-	// --- Then ---
-	assert.NoError(t, err)
-	assert.Equal(t, uint32(0x10), size)
-}
-
-func Test_ReadChunkSize_Error(t *testing.T) {
-	// --- Given ---
-	src := iokit.NewReaderMock(t)
-	src.OnRead(mock.Any).Return(0, iokit.ErrRead)
-
-	// --- When ---
-	size, err := ReadChunkSize(src)
-
-	// --- Then ---
-	assert.ErrorIs(t, err, iokit.ErrRead)
-	assert.Equal(t, uint32(0), size)
-}
-
-func Test_LimitedRead(t *testing.T) {
-	// --- Given ---
-	src := bytes.NewReader([]byte{0, 1, 2, 3})
-	dst := must.Value(memfs.NewFile("file"))
-
-	// --- When ---
-	err := LimitedRead(src, 3, dst)
-
-	// --- Then ---
-	assert.NoError(t, err)
-	assert.Equal(t, []byte{0, 1, 2}, iokit.ReadAllFromStart(dst))
-}
-
-func Test_LimitedRead_ErrUnexpectedEOF(t *testing.T) {
-	// --- Given ---
-	src := bytes.NewReader([]byte{0, 1, 2, 3})
-	dst := must.Value(memfs.NewFile("file"))
-
-	// --- When ---
-	err := LimitedRead(src, 30, dst)
-
-	// --- Then ---
-	assert.ErrorIs(t, err, io.ErrUnexpectedEOF)
-}
-
-func Test_LimitedRead_Error(t *testing.T) {
-	// --- Given ---
-	src := iokit.NewReaderMock(t)
-	src.OnRead(mock.Any).Return(0, iokit.ErrRead)
-	dst := must.Value(memfs.NewFile("file"))
-
-	// --- When ---
-	err := LimitedRead(src, 3, dst)
-
-	// --- Then ---
-	assert.ErrorIs(t, err, iokit.ErrRead)
-}
-
-func Test_SkipN_BlackHole(t *testing.T) {
-	// --- Given ---
-	buf := &bytes.Buffer{}
-	for i := 0; i < 30; i++ {
-		buf.WriteByte(byte(i))
-	}
-
-	// --- When ---
-	err := SkipN(buf, 20)
-
-	// --- Then ---
-	assert.NoError(t, err)
-	exp := []byte{20, 21, 22, 23, 24, 25, 26, 27, 28, 29}
-	assert.Equal(t, exp, must.Value(io.ReadAll(buf)))
-}
-
-func Test_SkipN_BlackHole_Error(t *testing.T) {
-	// --- Given ---
-	src := iokit.NewReaderMock(t)
-	src.OnRead(mock.Any).Return(0, iokit.ErrRead)
-
-	// --- When ---
-	err := SkipN(src, 20)
-
-	// --- Then ---
-	assert.ErrorIs(t, iokit.ErrRead, err)
-}
-
-func Test_SkipN_Seek(t *testing.T) {
-	// --- Given ---
-	buf := &memfs.File{}
-	for i := 0; i < 30; i++ {
-		_ = buf.WriteByte(byte(i))
-	}
-	buf.SeekStart()
-
-	// --- When ---
-	err := SkipN(buf, 20)
-
-	// --- Then ---
-	assert.NoError(t, err)
-	exp := []byte{20, 21, 22, 23, 24, 25, 26, 27, 28, 29}
-	assert.Equal(t, exp, must.Value(io.ReadAll(buf)))
 }
 
 func Test_RealSize(t *testing.T) {

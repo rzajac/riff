@@ -35,51 +35,6 @@ func ReadChunkID(r io.Reader, id *uint32) error {
 	return nil
 }
 
-// ReadChunkSize reads four-byte chunk size.
-// It returns [io.ErrUnexpectedEOF] if there are less than four bytes in
-// the reader.
-func ReadChunkSize(r io.Reader) (uint32, error) {
-	var size uint32
-	if err := binary.Read(r, le, &size); err != nil {
-		return 0, err
-	}
-	return size, nil
-}
-
-// LimitedRead reads size bytes to buf from r. It returns [io.ErrUnexpectedEOF]
-// if the number of read bytes is lower than size.
-func LimitedRead(r io.Reader, size uint32, dst io.ReaderFrom) error {
-	n, err := dst.ReadFrom(io.LimitReader(r, int64(size)))
-	if err != nil {
-		return err
-	}
-	if n < int64(size) {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
-}
-
-// SkipN skips n bytes from reader r.
-// If the reader implements [io.Seeker] SkipN will use it to skip n bytes,
-// otherwise SkipN will read n bytes and discard them.
-func SkipN(r io.Reader, n uint32) error {
-	// Check if r implements Seeker so we can just skip n bytes.
-	if skr, ok := r.(io.Seeker); ok {
-		_, err := skr.Seek(int64(n), io.SeekCurrent)
-		if err != nil {
-			return err
-		}
-		return nil
-	}
-
-	// If we cannot seek, we read data to black hole.
-	rf := io.Discard.(io.ReaderFrom) // nolint: forcetypeassert
-	if err := LimitedRead(r, n, rf); err != nil {
-		return err
-	}
-	return nil
-}
-
 // RealSize returns size increased by padding byte if necessary.
 func RealSize(size uint32) uint32 {
 	if size%2 != 0 {

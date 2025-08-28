@@ -76,6 +76,9 @@ type ChunkFMT struct {
 	// size of 0 is still written after the main 16-byte chunk. This value
 	// controls this behavior. When set to true, the zero size will be written.
 	WriteZeroExtra bool
+
+	// Chunk processing options.
+	opts Opts
 }
 
 func (ch *ChunkFMT) ID() uint32     { return IDfmt }
@@ -86,12 +89,16 @@ func (ch *ChunkFMT) Chunks() Chunks { return nil }
 func (ch *ChunkFMT) Raw() bool      { return false }
 
 // FMTMake is a Maker function for creating ChunkFMT instances.
-func FMTMake() Chunk { return FMT() }
+func FMTMake(opts ...OptsFn) Maker {
+	return func() Chunk {
+		return FMT(opts...)
+	}
+}
 
 // FMT returns new instance of ChunkFMT.
-func FMT() *ChunkFMT {
+func FMT(opts ...OptsFn) *ChunkFMT {
 	return &ChunkFMT{
-		size: FMTChunkSize,
+		opts: NewOpts(opts...),
 	}
 }
 
@@ -123,20 +130,19 @@ func (ch *ChunkFMT) Duration(ds uint32) time.Duration {
 }
 
 func (ch *ChunkFMT) ReadFrom(r io.Reader) (int64, error) {
-	var sum int64
-	if err := binary.Read(r, le, &ch.size); err != nil {
-		return sum, fmt.Errorf(errFmtDecode, Uint32(IDfmt), err)
+	cr, size, err := ch.opts.ChunkReader(r)
+	if err != nil {
+		return 0, fmt.Errorf(errFmtDecode, Uint32(IDfmt), err)
 	}
-	sum += 4
+	ch.size = size
 
 	if ch.size < FMTChunkSize {
-		return sum, fmt.Errorf(errFmtDecode, Uint32(IDfmt), ErrTooShort)
+		return cr.Count(), fmt.Errorf(errFmtDecode, Uint32(IDfmt), ErrTooShort)
 	}
 
-	if err := binary.Read(r, le, &ch.fmtStatic); err != nil {
-		return sum, fmt.Errorf(errFmtDecode, Uint32(IDfmt), err)
+	if err = binary.Read(cr, le, &ch.fmtStatic); err != nil {
+		return cr.Count(), fmt.Errorf(errFmtDecode, Uint32(IDfmt), err)
 	}
-	sum += int64(FMTChunkSize)
 
 	if ch.size > FMTChunkSize {
 		// The first uint16 value in the byte slice is the uint16 length of
@@ -146,42 +152,38 @@ func (ch *ChunkFMT) ReadFrom(r io.Reader) (int64, error) {
 		// padding should be added to the end of this data to word align it,
 		// but the value should remain non-aligned.
 		var es uint16
-		if err := binary.Read(r, le, &es); err != nil {
-			return sum, fmt.Errorf(errFmtDecode, Uint32(IDfmt), err)
+		if err := binary.Read(cr, le, &es); err != nil {
+			return cr.Count(), fmt.Errorf(errFmtDecode, Uint32(IDfmt), err)
 		}
-		sum += 2
 
 		extra := uint32(ch.size-FMTChunkSize) - 2 // Subtract uint16 size.
 		if extra == 0 {
 			ch.WriteZeroExtra = true
 		}
 		if extra != RealSize(uint32(es)) {
-			return sum, fmt.Errorf(errFmtDecode, Uint32(IDfmt), ErrChunkSizeMismatch)
+			return cr.Count(), fmt.Errorf(errFmtDecode, Uint32(IDfmt), ErrChunkSizeMismatch)
 		}
 
 		ch.extra = grow(ch.extra, int(es))
-		in, err := io.ReadFull(r, ch.extra)
-		sum += int64(in)
+		_, err = io.ReadFull(cr, ch.extra)
 		if err != nil {
-			return sum, fmt.Errorf(errFmtDecode, Uint32(IDfmt), err)
+			return cr.Count(), fmt.Errorf(errFmtDecode, Uint32(IDfmt), err)
 		}
 
 		// If the length of extra format bytes is odd, it means the padding
 		// byte was added to the end.
-		n, err := ReadPaddingIf(r, uint32(es))
-		sum += n
+		_, err = ReadPaddingIf(cr, uint32(es))
 		if err != nil {
-			return sum, fmt.Errorf(errFmtDecode, Uint32(IDfmt), err)
+			return cr.Count(), fmt.Errorf(errFmtDecode, Uint32(IDfmt), err)
 		}
 	}
 
-	n, err := ReadPaddingIf(r, ch.size)
-	sum += n
+	_, err = ReadPaddingIf(cr, ch.size)
 	if err != nil {
-		return sum, fmt.Errorf(errFmtDecode, Uint32(IDfmt), err)
+		return cr.Count(), fmt.Errorf(errFmtDecode, Uint32(IDfmt), err)
 	}
 
-	return sum, nil
+	return cr.Count(), nil
 }
 
 func (ch *ChunkFMT) WriteTo(w io.Writer) (int64, error) {

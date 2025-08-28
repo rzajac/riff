@@ -2,7 +2,6 @@ package riff
 
 import (
 	"bytes"
-	"encoding/binary"
 	"fmt"
 	"io"
 )
@@ -22,25 +21,25 @@ type ChunkRAWC struct {
 	// Buffer to read the chunk data into.
 	data []byte
 
-	// When set to false decoder will try to skip reading the data.
-	load bool
+	// Chunk processing options.
+	opts Opts
 }
 
 // RAWCMake returns [IDMaker] function for creating [ChunkRAWC] instances.
-func RAWCMake(load bool) IDMaker {
+func RAWCMake(opts ...OptsFn) IDMaker {
 	return func(id uint32) Chunk {
-		return RAWC(id, load)
+		return RAWC(id, opts...)
 	}
 }
 
 // RAWC returns a new instance of [ChunkRAWC] for given ID.
-func RAWC(id uint32, load bool) *ChunkRAWC {
+func RAWC(id uint32, opts ...OptsFn) *ChunkRAWC {
 	ch := &ChunkRAWC{
 		id:   id,
-		load: load,
+		opts: NewOpts(opts...),
 	}
 
-	if load {
+	if ch.opts.LoadData() {
 		ch.data = make([]byte, 0, 1<<8)
 	}
 
@@ -59,40 +58,36 @@ func (ch *ChunkRAWC) Body() io.Reader {
 }
 
 func (ch *ChunkRAWC) ReadFrom(r io.Reader) (int64, error) {
-	var sum int64
-
-	if err := binary.Read(r, le, &ch.size); err != nil {
-		return sum, fmt.Errorf(errFmtDecode, linkids(idRAWC, ch.id), err)
+	cr, size, err := ch.opts.ChunkReader(r)
+	if err != nil {
+		return 0, fmt.Errorf(errFmtDecode, linkids(idRAWC, ch.id), err)
 	}
-	sum += 4
+	ch.size = size
 
-	if !ch.load {
+	if !ch.opts.loadData {
 		rs := RealSize(ch.size) // Skip padding byte if present.
-		if err := SkipN(r, rs); err != nil {
-			return sum, fmt.Errorf(errFmtDecode, linkids(idRAWC, ch.id), err)
+		if err := cr.SkipN(rs); err != nil {
+			return cr.Count(), fmt.Errorf(errFmtDecode, linkids(idRAWC, ch.id), err)
 		}
-		sum += int64(rs)
-		return sum, nil
+		return cr.Count(), nil
 	}
 
 	ch.data = grow(ch.data, int(ch.size))
-	in, err := io.ReadFull(r, ch.data)
-	sum += int64(in)
+	_, err = io.ReadFull(cr, ch.data)
 	if err != nil {
-		return sum, fmt.Errorf(errFmtDecode, linkids(idRAWC, ch.id), err)
+		return cr.Count(), fmt.Errorf(errFmtDecode, linkids(idRAWC, ch.id), err)
 	}
 
-	n, err := ReadPaddingIf(r, ch.size)
-	sum += n
+	_, err = ReadPaddingIf(cr, ch.size)
 	if err != nil {
-		return sum, fmt.Errorf(errFmtDecode, linkids(idRAWC, ch.id), err)
+		return cr.Count(), fmt.Errorf(errFmtDecode, linkids(idRAWC, ch.id), err)
 	}
 
-	return sum, nil
+	return cr.Count(), nil
 }
 
 func (ch *ChunkRAWC) WriteTo(w io.Writer) (int64, error) {
-	if ch.data == nil {
+	if !ch.opts.LoadData() {
 		return 0, ErrSkipDataMode
 	}
 

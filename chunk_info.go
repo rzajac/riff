@@ -2,7 +2,6 @@ package riff
 
 import (
 	"bytes"
-	"encoding/binary"
 	"fmt"
 	"io"
 )
@@ -135,19 +134,23 @@ type ChunkINFO struct {
 
 	// Label text.
 	text []byte
+
+	// Chunk processing options.
+	opts Opts
 }
 
 // INFOMake returns [IDMaker] function for [ChunkINFO] instances.
-func INFOMake(_ bool) IDMaker {
+func INFOMake(opts ...OptsFn) IDMaker {
 	return func(id uint32) Chunk {
-		return INFO(id)
+		return INFO(id, opts...)
 	}
 }
 
 // INFO returns a new instance of [ChunkINFO].
-func INFO(id uint32) *ChunkINFO {
+func INFO(id uint32, opts ...OptsFn) *ChunkINFO {
 	return &ChunkINFO{
-		id: id,
+		id:   id,
+		opts: NewOpts(opts...),
 	}
 }
 
@@ -164,29 +167,26 @@ func (ch *ChunkINFO) Text() io.Reader {
 }
 
 func (ch *ChunkINFO) ReadFrom(r io.Reader) (int64, error) {
-	var sum int64
-
-	if err := binary.Read(r, le, &ch.size); err != nil {
-		return sum, fmt.Errorf(errFmtDecode, linkids(IDINFO, ch.id), err)
+	cr, size, err := ch.opts.ChunkReader(r)
+	if err != nil {
+		return 0, fmt.Errorf(errFmtDecode, linkids(IDINFO, ch.id), err)
 	}
-	sum += 4
+	ch.size = size
 
 	ch.text = grow(ch.text, int(ch.size))
-	in, err := io.ReadFull(r, ch.text)
-	sum += int64(in)
+	_, err = io.ReadFull(cr, ch.text)
 	if err != nil {
-		return sum, fmt.Errorf(errFmtDecode, linkids(IDINFO, ch.id), err)
+		return cr.Count(), fmt.Errorf(errFmtDecode, linkids(IDINFO, ch.id), err)
 	}
 
 	// If the length of text bytes is odd, it means the padding byte was added
 	// to the end.
-	n, err := ReadPaddingIf(r, ch.size)
-	sum += n
+	_, err = ReadPaddingIf(cr, ch.size)
 	if err != nil {
-		return sum, fmt.Errorf(errFmtDecode, linkids(IDINFO, ch.id), err)
+		return cr.Count(), fmt.Errorf(errFmtDecode, linkids(IDINFO, ch.id), err)
 	}
 
-	return sum, nil
+	return cr.Count(), nil
 }
 
 func (ch *ChunkINFO) WriteTo(w io.Writer) (int64, error) {

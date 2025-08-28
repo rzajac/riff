@@ -8,10 +8,10 @@ import (
 
 func Test_Registry_Register_Get(t *testing.T) {
 	// --- Given ---
-	reg := NewRegistry(RAWCMake(LoadData))
+	reg := NewRegistry(RAWCMake(WithLoadData()))
 
 	// --- When ---
-	reg.Register(IDfmt, FMTMake)
+	reg.Register(IDfmt, FMTMake())
 
 	// --- Then ---
 	assert.Type(t, &ChunkFMT{}, reg.Get(IDfmt))
@@ -20,8 +20,8 @@ func Test_Registry_Register_Get(t *testing.T) {
 
 func Test_Registry_Get_Reuse(t *testing.T) {
 	// --- Given ---
-	reg := NewRegistry(RAWCMake(LoadData))
-	reg.Register(IDfmt, FMTMake)
+	reg := NewRegistry(RAWCMake(WithLoadData()))
+	reg.Register(IDfmt, FMTMake())
 
 	// --- When ---
 	ch0 := reg.Get(IDfmt)
@@ -34,8 +34,8 @@ func Test_Registry_Get_Reuse(t *testing.T) {
 
 func Test_Registry_Has(t *testing.T) {
 	// --- Given ---
-	reg := NewRegistry(RAWCMake(LoadData))
-	reg.Register(IDfmt, FMTMake)
+	reg := NewRegistry(RAWCMake(WithLoadData()))
+	reg.Register(IDfmt, FMTMake())
 
 	// --- Then ---
 	assert.True(t, reg.Has(IDfmt))
@@ -44,7 +44,7 @@ func Test_Registry_Has(t *testing.T) {
 
 func Test_Registry_GetNoRaw(t *testing.T) {
 	// --- Given ---
-	reg := NewRegistry(RAWCMake(LoadData))
+	reg := NewRegistry(RAWCMake(WithLoadData()))
 
 	// --- When ---
 	ch0 := reg.GetNoRaw(IDfmt)
