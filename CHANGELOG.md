@@ -1,3 +1,7 @@
+## v0.3.0 (Mon, 15 Sep 2025 08:25:37 UTC)
+- feat: #5 Implement ChunkReader with options for chunk size limit.
+- chore: Update dependencies.
+
 ## v0.2.5 (Tue, 12 Aug 2025 11:49:19 UTC)
 - Add checks for invalid chunks sizes.
 
