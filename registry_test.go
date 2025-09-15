@@ -14,8 +14,8 @@ func Test_Registry_Register_Get(t *testing.T) {
 	reg.Register(IDfmt, FMTMake())
 
 	// --- Then ---
-	assert.Type(t, &ChunkFMT{}, reg.Get(IDfmt))
-	assert.Type(t, &ChunkRAWC{}, reg.Get(IDUNKN))
+	assert.SameType(t, &ChunkFMT{}, reg.Get(IDfmt))
+	assert.SameType(t, &ChunkRAWC{}, reg.Get(IDUNKN))
 }
 
 func Test_Registry_Get_Reuse(t *testing.T) {

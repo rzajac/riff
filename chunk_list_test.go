@@ -93,7 +93,7 @@ func Test_ChunkLIST_Type_INFO(t *testing.T) {
 	assert.Len(t, 1, ch.Chunks())
 
 	sub := ch.Chunks()[0]
-	assert.Type(t, &ChunkINFO{}, sub)
+	assert.SameType(t, &ChunkINFO{}, sub)
 	assert.Equal(t, LabIART, sub.ID())
 }
 
@@ -115,11 +115,11 @@ func Test_ChunkLIST_Type_adtl(t *testing.T) {
 	assert.Len(t, 2, ch.Chunks())
 
 	sub := ch.Chunks()[0]
-	assert.Type(t, &ChunkLABL{}, sub)
+	assert.SameType(t, &ChunkLABL{}, sub)
 	assert.Equal(t, IDlabl, sub.ID())
 
 	sub = ch.Chunks()[1]
-	assert.Type(t, &ChunkLTXT{}, sub)
+	assert.SameType(t, &ChunkLTXT{}, sub)
 	assert.Equal(t, IDltxt, sub.ID())
 }
 
@@ -141,7 +141,7 @@ func Test_ChunkLIST_Type_unknown(t *testing.T) {
 	assert.Len(t, 1, ch.Chunks())
 
 	sub := ch.Chunks()[0]
-	assert.Type(t, &ChunkRAWC{}, sub)
+	assert.SameType(t, &ChunkRAWC{}, sub)
 	assert.Equal(t, LabIART, sub.ID())
 }
 

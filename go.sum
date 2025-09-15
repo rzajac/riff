@@ -2,3 +2,5 @@ github.com/ctx42/memfs v0.2.0 h1:IPaLx6XmJgJImtD2JFwBCW7XNtnv67zZvLnIsUPncgs=
 github.com/ctx42/memfs v0.2.0/go.mod h1:an52gknoEMdqMuqqTZtWDooHrBNGyg64dGD/GDiMks0=
 github.com/ctx42/testing v0.36.0 h1:Zi37gtmHXgidLuXtgQwYTafTWLwcSr4SCw9oj2PwJjs=
 github.com/ctx42/testing v0.36.0/go.mod h1:VHcxY4uhZQ8Lewevgmc9WHjJQc9CopJm9IAOTK5XbaM=
+github.com/ctx42/testing v0.37.1 h1:WQc594F3bM4GNWIQ/0KL2dPeHxsjMXKZ9OnvXUHw2j4=
+github.com/ctx42/testing v0.37.1/go.mod h1:VHcxY4uhZQ8Lewevgmc9WHjJQc9CopJm9IAOTK5XbaM=
